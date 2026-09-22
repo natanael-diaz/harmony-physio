@@ -28,3 +28,7 @@ export * from "@prisma/client";
 
 // Password hashing helpers (task 2.4)
 export * from "./auth";
+
+// Credentials authentication + lockout policy (task 2.1)
+export * from "./authenticate";
+export * from "./lockout";

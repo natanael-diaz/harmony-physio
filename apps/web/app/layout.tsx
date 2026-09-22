@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description:
     "Harmony Physiotherapy Clinic — specialist physiotherapy services in the UK. Book appointments, access your records, and connect with your clinician.",
   metadataBase: new URL(
-    process.env.NEXTAUTH_URL ?? "https://app.harmonyphysio.co.uk"
+    process.env.AUTH_URL ?? "https://app.harmonyphysio.co.uk"
   ),
   openGraph: {
     type: "website",
