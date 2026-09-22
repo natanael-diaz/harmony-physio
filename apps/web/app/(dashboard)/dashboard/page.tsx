@@ -5,9 +5,15 @@ export const metadata: Metadata = {
 };
 
 /**
- * Dashboard root — rendered after successful authentication.
- * Full implementation in Sprint 2: role-based redirect (patient/clinician/admin).
- * For now, shows a skeleton so the route tree is valid and renderable.
+ * Dashboard root at /dashboard, rendered after successful authentication.
+ *
+ * Previously sat at (dashboard)/page.tsx, which resolves to "/" — the same
+ * route as the landing page. That collision failed `next build` at prerender.
+ *
+ * The (dashboard) route group is retained for a shared authenticated layout.
+ * Task 2.2 adds /dashboard/patient and /dashboard/clinician and the role-based
+ * redirect in middleware; this page is the unauthenticated-role fallback and
+ * the redirect target before those exist.
  */
 export default function DashboardPage() {
   return (
