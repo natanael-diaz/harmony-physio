@@ -18,12 +18,10 @@
 // ---------------------------------------------------------------------------
 
 import { PrismaClient, Role } from "@prisma/client";
-import bcrypt from "bcryptjs";
+
+import { hashPassword } from "../src/auth";
 
 const prisma = new PrismaClient();
-
-// Must match the cost factor used by the app's hashing helpers (task 2.4).
-const BCRYPT_ROUNDS = 12;
 
 // The consent copy version these users are recorded as having accepted.
 const CONSENT_VERSION = "2026-09-01";
@@ -35,7 +33,7 @@ async function main() {
     throw new Error("Refusing to seed: NODE_ENV is production.");
   }
 
-  const hashedPassword = await bcrypt.hash(SEED_PASSWORD, BCRYPT_ROUNDS);
+  const hashedPassword = await hashPassword(SEED_PASSWORD);
   // Applied in both the create and update branches. The lockout reset is what
   // makes "re-seed to unlock yourself" work after testing the 2.3 error states.
   const consent = {

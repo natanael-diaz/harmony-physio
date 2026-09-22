@@ -25,3 +25,6 @@ if (process.env.NODE_ENV !== "production") {
 
 // Re-export generated types so consumers only need @harmony/db
 export * from "@prisma/client";
+
+// Password hashing helpers (task 2.4)
+export * from "./auth";
