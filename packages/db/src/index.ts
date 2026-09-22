@@ -35,3 +35,6 @@ export * from "./lockout";
 
 // GDPR consent policy (task 2.6)
 export * from "./consent";
+
+// Email verification tokens (task 2.5)
+export * from "./verification";
