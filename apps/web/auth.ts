@@ -1,50 +1,29 @@
 // ---------------------------------------------------------------------------
-// NextAuth v5 configuration (task 2.1)
+// NextAuth v5 — full configuration (task 2.1)
 //
-// No Prisma adapter — see the note above model Account in schema.prisma. The
+// No Prisma adapter: see the note above model Account in schema.prisma. The
 // adapter needs User.emailVerified to be DateTime?; ours is Boolean. Sessions
 // are JWTs, so there is no server-side session store to adapt anyway.
 //
-// All the credentials logic lives in @harmony/db (authenticateCredentials), so
-// it can be tested against a real database without booting NextAuth.
+// Session policy and route authorization live in auth.config.ts, which stays
+// database-free so middleware can import it on the edge runtime. This file adds
+// the credentials provider, which pulls in Prisma and is therefore Node-only.
+//
+// The credentials logic itself lives in @harmony/db (authenticateCredentials),
+// so it can be driven against a real database without booting NextAuth.
 // ---------------------------------------------------------------------------
 
-import { authenticateCredentials, prisma, type Role } from "@harmony/db";
+import { authenticateCredentials, prisma } from "@harmony/db";
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 
-// ADR-002: 15 minutes for clinical staff, 30 for patients. Staff sessions sit
-// in front of patient records on shared machines; patients get the longer TTL
-// because re-authenticating mid-booking loses the booking.
-const SESSION_TTL_SECONDS: Record<Role, number> = {
-  ADMIN: 15 * 60,
-  CLINICIAN: 15 * 60,
-  RECEPTIONIST: 15 * 60,
-  PATIENT: 30 * 60,
-};
+import { authConfig } from "./auth.config";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
-
-/**
- * The fields we put on the JWT.
- *
- * Not a module augmentation: `@auth/core/jwt`, where the JWT interface is
- * actually declared, is not resolvable from apps/web under pnpm's strict
- * layout, so `declare module` there silently creates a phantom module rather
- * than augmenting anything. Pinning @auth/core as a direct dependency to work
- * around that risks drifting from the version next-auth resolves. A local type
- * applied at the callback boundary is narrower and honest about the cast.
- */
-type HarmonyToken = {
-  userId?: string;
-  role?: Role;
-  /** Epoch ms. Enforces the per-role TTL that session.maxAge cannot express. */
-  absoluteExpiry?: number;
-};
 
 // Both extend CredentialsSignin so they carry a stable `code`.
 //
@@ -75,16 +54,7 @@ export class AccountLockedError extends CredentialsSignin {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: {
-    strategy: "jwt",
-    // The ceiling. Per-role expiry is enforced in the jwt callback below,
-    // because NextAuth takes a single static maxAge and we need two.
-    maxAge: Math.max(...Object.values(SESSION_TTL_SECONDS)),
-  },
-
-  pages: {
-    signIn: "/login",
-  },
+  ...authConfig,
 
   providers: [
     Credentials({
@@ -122,57 +92,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  callbacks: {
-    async jwt({ token, user }) {
-      const harmonyToken = token as HarmonyToken;
-
-      // First call after a successful sign-in: stamp identity and the absolute
-      // expiry for this role. Later calls only see `token`.
-      if (user) {
-        harmonyToken.role = user.role;
-        // NextAuth types User.id as optional, though our authorize() always
-        // returns one. Guarded rather than asserted so a future provider that
-        // omits it degrades to an id-less session instead of stamping
-        // undefined onto the token.
-        if (user.id) harmonyToken.userId = user.id;
-        harmonyToken.absoluteExpiry =
-          Date.now() + SESSION_TTL_SECONDS[user.role] * 1000;
-        return token;
-      }
-
-      // Past the role-specific TTL: returning null invalidates the session so
-      // the next request is unauthenticated.
-      if (
-        typeof harmonyToken.absoluteExpiry === "number" &&
-        Date.now() > harmonyToken.absoluteExpiry
-      ) {
-        return null;
-      }
-
-      return token;
-    },
-
-    async session({ session, token }) {
-      const harmonyToken = token as HarmonyToken;
-
-      // Carried on the token so RBAC needs no database round-trip per request
-      // (ADR-002). Note this makes role changes take effect only at the next
-      // sign-in — acceptable at a 15-30 minute TTL.
-      if (harmonyToken.role) session.user.role = harmonyToken.role;
-      if (harmonyToken.userId) session.user.id = harmonyToken.userId;
-
-      // Report the role-specific expiry, not session.maxAge. Without this a
-      // CLINICIAN session advertises the 30 minute ceiling while the jwt
-      // callback actually invalidates it at 15, and any client counting down
-      // to `expires` is simply wrong.
-      if (typeof harmonyToken.absoluteExpiry === "number") {
-        session.expires = new Date(
-          harmonyToken.absoluteExpiry,
-        ).toISOString() as typeof session.expires;
-      }
-
-      return session;
-    },
-  },
 });
