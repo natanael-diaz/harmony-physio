@@ -39,7 +39,10 @@ const nextConfig = {
   experimental: {
     // Server Actions are stable in Next 14, but include for clarity
     serverActions: {
-      allowedOrigins: ["localhost:3000"],
+      allowedOrigins: [
+        "localhost:3000",
+        process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, "") ?? "",
+      ].filter(Boolean),
     },
   },
 };

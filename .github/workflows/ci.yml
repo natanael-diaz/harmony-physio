@@ -67,6 +67,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter @harmony/db db:generate
+
       - name: Run typecheck
         run: pnpm typecheck
 
@@ -94,10 +97,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter @harmony/db db:generate
+
       - name: Run tests
         run: pnpm test
         env:
           # Vitest tests should not need a real DB; use mocks/in-memory stubs
           DATABASE_URL: postgresql://test:test@localhost:5432/test
-          NEXTAUTH_SECRET: ci-secret-not-used-in-real-env
-          NEXTAUTH_URL: http://localhost:3000
+          AUTH_SECRET: ci-secret-not-used-in-real-env
+          AUTH_URL: http://localhost:3000

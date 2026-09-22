@@ -15,9 +15,6 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
       "@harmony/ui": [
         "../../packages/ui/src/index.ts"
       ],
