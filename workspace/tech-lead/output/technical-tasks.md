@@ -27,7 +27,7 @@
 
 | # | Task | Owner | Est. |
 |---|------|-------|------|
-| 2.1 | `apps/web/auth.ts` — NextAuth v5 config with Prisma adapter, credentials provider, JWT strategy | Senior Engineer | 2 h |
+| 2.1 | `apps/web/auth.ts` — NextAuth v5 config, credentials provider, JWT strategy. **No Prisma adapter** — removed 2026-09-22, it requires `User.emailVerified` to be `DateTime?`; do a custom user lookup in `authorize()` instead | Senior Engineer | 2 h |
 | 2.2 | `apps/web/middleware.ts` — route protection: `/dashboard/*` requires authenticated session; role-based redirect (PATIENT → `/dashboard/patient`, CLINICIAN → `/dashboard/clinician`) | Senior Engineer | 1 h |
 | 2.3 | Login page wired to `signIn()` server action; error states (invalid credentials, account locked) | Senior Engineer | 1 h |
 | 2.4 | Password hashing utility (`bcryptjs`, min 12 rounds) + `packages/db/src/auth.ts` helpers | Senior Engineer | 0.5 h |
