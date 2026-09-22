@@ -1,0 +1,399 @@
+// Harmony Physio — Prisma Schema
+// PostgreSQL on AWS RDS eu-west-2
+// NHS DTAC compliant, GDPR-aware
+// Generated: 2026-09-21
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  CLINICIAN
+  PATIENT
+  RECEPTIONIST
+}
+
+enum AppointmentType {
+  IN_PERSON
+  VIDEO
+  PHONE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum EhrRecordType {
+  ASSESSMENT
+  TREATMENT_NOTE
+  DISCHARGE
+  REFERRAL
+  PRESCRIPTION
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum VideoSessionStatus {
+  WAITING
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// User — base authentication entity
+// Covers patients, clinicians, admin, and receptionists
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  hashedPassword String
+  role           Role      @default(PATIENT)
+
+  // Email verification
+  emailVerified  Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
+  // Soft delete (GDPR right-to-erasure workflow — mark deleted, scrub PII separately)
+  deletedAt      DateTime?
+
+  // GDPR consent tracking (ICO requirement)
+  consentGivenAt  DateTime?
+  consentVersion  String?
+
+  // Timestamps
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastLoginAt    DateTime?
+
+  // Relations
+  patient        Patient?
+  clinician      Clinician?
+  auditLogsAsActor AuditLog[] @relation("AuditActor")
+
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Patient — extends User 1:1
+// NHS-specific fields included per NHS Data Dictionary
+// ---------------------------------------------------------------------------
+
+model Patient {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // NHS identifier — optional (not all patients will have/provide one)
+  // Format: 3-3-4 digit groups e.g. 485 777 3456 — validated at app layer
+  nhsNumber String? @unique
+
+  // Demographics
+  dateOfBirth DateTime
+  gender      String   // free text per NHS Data Dictionary; avoids rigid enum for inclusivity
+  phone       String
+
+  // Address
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  postcode     String
+  country      String  @default("GB")
+
+  // GP details (required for referral letters and NHS integration)
+  gpName      String?
+  gpPractice  String?
+  gpAddress   String?
+
+  // Emergency contact
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+
+  // Clinical flags — stored as array; searched via GIN index
+  medicalAlerts String[]
+
+  // Language / access requirements (Equality Act 2010)
+  preferredLanguage   String  @default("en")
+  requiresInterpreter Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  appointments Appointment[] @relation("PatientAppointments")
+  ehrs         ElectronicHealthRecord[] @relation("PatientEHR")
+  payments     Payment[]     @relation("PatientPayments")
+
+  @@index([userId])
+  @@index([nhsNumber])
+  @@index([dateOfBirth])
+  @@map("patients")
+}
+
+// ---------------------------------------------------------------------------
+// Clinician — extends User 1:1
+// HCPC registration required for all physiotherapists in the UK
+// ---------------------------------------------------------------------------
+
+model Clinician {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Regulatory — Health and Care Professions Council (HCPC)
+  hcpcRegistrationNumber String  @unique
+  specializations        String[]
+
+  // Profile
+  bio            String?
+  qualifications String?
+
+  // Scheduling — stored as JSON (e.g. weekly recurring blocks)
+  // Structure: { mon: [{start:"09:00", end:"17:00"}], ... }
+  availabilitySlots Json?
+
+  isActive              Boolean @default(true)
+  acceptingNewPatients  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  appointments Appointment[] @relation("ClinicianAppointments")
+  ehrs         ElectronicHealthRecord[] @relation("ClinicianEHR")
+  signedEhrs   ElectronicHealthRecord[] @relation("EHRSigner")
+
+  @@index([userId])
+  @@index([hcpcRegistrationNumber])
+  @@index([isActive, acceptingNewPatients])
+  @@map("clinicians")
+}
+
+// ---------------------------------------------------------------------------
+// Appointment
+// ---------------------------------------------------------------------------
+
+model Appointment {
+  id          String @id @default(cuid())
+  patientId   String
+  clinicianId String
+
+  scheduledAt     DateTime
+  durationMinutes Int      @default(60)
+
+  type   AppointmentType
+  status AppointmentStatus @default(SCHEDULED)
+
+  // Cancellation
+  cancellationReason String?
+  cancelledBy        String?   // userId of whoever cancelled
+  cancelledAt        DateTime?
+
+  // Notes
+  notes       String?  // clinician notes — encrypted at app layer
+  patientNotes String? // patient-supplied pre-appointment context
+
+  // Communication tracking
+  reminderSentAt     DateTime?
+  confirmationSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  patient     Patient   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Restrict)
+  clinician   Clinician @relation("ClinicianAppointments", fields: [clinicianId], references: [id], onDelete: Restrict)
+  ehrs        ElectronicHealthRecord[] @relation("AppointmentEHR")
+  payment     Payment?  @relation("AppointmentPayment")
+  videoSession VideoSession?
+
+  @@index([patientId, scheduledAt])
+  @@index([clinicianId, scheduledAt])
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("appointments")
+}
+
+// ---------------------------------------------------------------------------
+// ElectronicHealthRecord (EHR)
+// Content field is encrypted at application layer (AES-256-GCM)
+// Immutable versions maintained for clinical audit trail
+// ---------------------------------------------------------------------------
+
+model ElectronicHealthRecord {
+  id          String @id @default(cuid())
+  patientId   String
+  clinicianId String
+  appointmentId String?
+
+  recordType EhrRecordType
+
+  // Encrypted at application layer before write; decrypted after read
+  content String
+
+  // S3 object keys for attached files (images, PDFs, etc.)
+  attachments String[]
+
+  // Flag for highly sensitive content (e.g. mental health, sexual health)
+  isConfidential Boolean @default(false)
+
+  // Clinical sign-off
+  signedBy  String?   // clinicianId
+  signedAt  DateTime?
+
+  // Versioning for audit trail
+  version           Int     @default(1)
+  previousVersionId String? // self-referential for version chain
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  patient       Patient   @relation("PatientEHR", fields: [patientId], references: [id], onDelete: Restrict)
+  clinician     Clinician @relation("ClinicianEHR", fields: [clinicianId], references: [id], onDelete: Restrict)
+  appointment   Appointment? @relation("AppointmentEHR", fields: [appointmentId], references: [id], onDelete: SetNull)
+  signer        Clinician? @relation("EHRSigner", fields: [signedBy], references: [id], onDelete: SetNull)
+  previousVersion ElectronicHealthRecord? @relation("EHRVersionChain", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  laterVersions   ElectronicHealthRecord[] @relation("EHRVersionChain")
+
+  @@index([patientId, createdAt(sort: Desc)])
+  @@index([clinicianId])
+  @@index([appointmentId])
+  @@index([recordType])
+  @@map("electronic_health_records")
+}
+
+// ---------------------------------------------------------------------------
+// AuditLog — immutable, append-only (GDPR Article 30 / NHS DTAC)
+// No updatedAt — records must never be modified
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String @id @default(cuid())
+  userId     String  // actor — who performed the action
+  targetId   String  // the affected resource ID
+  targetType String  // e.g. "Patient", "ElectronicHealthRecord"
+
+  // Action code — e.g. "PATIENT_RECORD_VIEWED", "APPOINTMENT_CANCELLED"
+  action     String
+
+  // Request context
+  ipAddress  String?
+  userAgent  String?
+
+  // Arbitrary JSON context (diff snapshots, field names, etc.)
+  metadata   Json?
+
+  timestamp  DateTime @default(now())
+
+  // Relations
+  actor User @relation("AuditActor", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, timestamp])
+  @@index([targetId, targetType, timestamp])
+  @@index([action, timestamp])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Payment
+// Amounts stored in minor currency units (pence) per Stripe convention
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id          String @id @default(cuid())
+  patientId   String
+  appointmentId String? @unique
+
+  // Stripe references
+  stripePaymentIntentId String  @unique
+  stripeCustomerId      String
+
+  // Amount in pence (e.g. 7500 = £75.00)
+  amount   Int
+  currency String @default("gbp")
+
+  status PaymentStatus @default(PENDING)
+
+  // Refund details
+  refundAmount Int?
+  refundReason String?
+
+  // Invoice
+  invoiceNumber String? @unique
+  invoiceUrl    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  patient     Patient      @relation("PatientPayments", fields: [patientId], references: [id], onDelete: Restrict)
+  appointment Appointment? @relation("AppointmentPayment", fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId, createdAt])
+  @@index([stripePaymentIntentId])
+  @@index([status])
+  @@map("payments")
+}
+
+// ---------------------------------------------------------------------------
+// VideoSession — 1:1 with Appointment
+// Powered by Daily.co (dailyRoomUrl / dailyRoomName)
+// Recordings only stored with explicit patient consent
+// ---------------------------------------------------------------------------
+
+model VideoSession {
+  id            String @id @default(cuid())
+  appointmentId String @unique
+
+  // Daily.co room details
+  dailyRoomUrl  String
+  dailyRoomName String
+
+  status VideoSessionStatus @default(WAITING)
+
+  startedAt       DateTime?
+  endedAt         DateTime?
+  durationSeconds Int?
+
+  // Recording — only if recordingConsentGiven is true
+  // S3 key or CDN URL; nullable by design
+  recordingUrl            String?
+  recordingConsentGiven   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+  @@index([status])
+  @@map("video_sessions")
+}

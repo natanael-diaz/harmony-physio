@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harmony Physio — Project Brief</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --navy:    #0B3D6B;
+  --teal:    #15A898;
+  --teal-bg: #E8F7F6;
+  --accent:  #E8622A;
+  --bg:      #F5F7FA;
+  --surface: #FFFFFF;
+  --border:  #D8E2EE;
+  --text:    #1A2A3A;
+  --muted:   #5A6E84;
+  --tag-bg:  #EDF2F8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #0D1B2A;
+    --surface: #122032;
+    --border:  #1E3250;
+    --text:    #D8E8F4;
+    --muted:   #7A9AB8;
+    --tag-bg:  #162840;
+    --teal-bg: #0E2D38;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+  padding: 32px 24px;
+}
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header */
+.header {
+  background: var(--navy);
+  border-radius: 14px;
+  padding: 36px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: -60px;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: var(--teal);
+  opacity: .07;
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.brand {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 6px;
+}
+.doc-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(20px, 4vw, 28px);
+  color: #fff;
+  line-height: 1.2;
+}
+.doc-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,.55);
+  margin-top: 6px;
+}
+.status-badge {
+  background: rgba(21,168,152,.2);
+  border: 1px solid rgba(21,168,152,.4);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #4DD9CF;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.meta-pills span {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 99px;
+  padding: 3px 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,.75);
+}
+
+/* Card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 30px;
+}
+.card-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 18px;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+@media (prefers-color-scheme: dark) { .card-title { color: #8DC8F0; } }
+
+/* Scope table */
+.scope-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.scope-table th {
+  text-align: left; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  padding: 7px 12px; border-bottom: 1px solid var(--border);
+  background: var(--tag-bg);
+}
+.scope-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.scope-table tr:last-child td { border-bottom: none; }
+.scope-table td:first-child { font-weight: 600; white-space: nowrap; color: var(--navy); width: 36%; }
+@media (prefers-color-scheme: dark) { .scope-table td:first-child { color: #8DC8F0; } }
+.tick { color: var(--teal); font-weight: 700; }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.t-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+.t-row:last-child { border-bottom: none; }
+.t-day {
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--surface); background: var(--navy);
+  border-radius: 5px; padding: 3px 9px;
+  flex-shrink: 0; margin-top: 2px;
+  white-space: nowrap;
+}
+.t-day.m2 { background: var(--teal); }
+.t-label { font-weight: 600; }
+.t-note { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+/* Compliance list */
+.comp-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.comp-list li {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--teal-bg); border-radius: 7px; padding: 10px 14px;
+  font-size: 13.5px;
+}
+.comp-list li .icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.comp-list li strong { display: block; font-weight: 600; }
+.comp-list li span { color: var(--muted); font-size: 12.5px; }
+
+/* Cost table */
+.cost-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cost-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.cost-table tr:last-child td { border-bottom: none; }
+.cost-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.cost-table .total-row td {
+  font-weight: 700; font-size: 15px;
+  border-top: 2px solid var(--border);
+  color: var(--navy);
+  padding-top: 14px;
+}
+@media (prefers-color-scheme: dark) { .cost-table .total-row td { color: #8DC8F0; } }
+.cost-table .label-muted { font-size: 12px; color: var(--muted); font-weight: 400; }
+.cost-table .teal { color: var(--teal); }
+
+/* Milestone box */
+.milestone-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+.ms-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.ms-card .ms-num {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--teal); margin-bottom: 4px;
+}
+.ms-card .ms-amount {
+  font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--navy); line-height: 1;
+}
+@media (prefers-color-scheme: dark) { .ms-card .ms-amount { color: #8DC8F0; } }
+.ms-card .ms-trigger { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.ms-card .ms-items { font-size: 12.5px; margin-top: 8px; color: var(--text); }
+
+/* Data flow */
+.dataflow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+.df-node {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.df-node .df-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+.df-node .df-loc { font-size: 11.5px; color: var(--teal); font-weight: 600; }
+.df-node .df-enc { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.uk-flag { font-size: 10px; }
+
+/* Sig block */
+.sig-block {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.sig-field { display: flex; flex-direction: column; gap: 4px; }
+.sig-field .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.sig-field .val { font-weight: 600; color: var(--text); }
+.sig-line { height: 32px; border-bottom: 1px solid var(--border); margin-top: 6px; width: 180px; }
+
+/* Notice */
+.notice {
+  background: var(--teal-bg);
+  border-left: 3px solid var(--teal);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 8px;
+}
+.notice strong { color: var(--teal); }
+
+/* Footer */
+.footer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding-top: 8px;
+}
+
+@media (max-width: 600px) {
+  body { padding: 20px 16px; }
+  .header { padding: 26px 22px; }
+  .card { padding: 22px 18px; }
+  .milestone-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div>
+        <p class="brand">Project Brief · Kontra Digital</p>
+        <h1 class="doc-title">Harmony Physio<br>Platform Development</h1>
+        <p class="doc-sub">Prepared for: Harmony Physiotherapy Clinic · harmonyphysio.co.uk</p>
+      </div>
+      <span class="status-badge">Pre-Order Review</span>
+    </div>
+    <div class="meta-pills">
+      <span>📅 21 September 2026</span>
+      <span>🏥 Standard + DTAC Add-on</span>
+      <span>🇬🇧 UK · AWS eu-west-2</span>
+      <span>💰 $850 total</span>
+    </div>
+  </header>
+
+  <!-- Scope -->
+  <div class="card">
+    <h2 class="card-title">Scope of Delivery</h2>
+    <div style="overflow-x:auto;">
+      <table class="scope-table">
+        <thead>
+          <tr><th>Deliverable</th><th>Detail</th><th style="text-align:center;width:60px">Included</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Online Booking Portal</td>
+            <td>Patient self-booking, real-time calendar, automated SMS &amp; email reminders</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>Patient Portal</td>
+            <td>Secure login, appointment history, clinical notes, documents, consent forms, secure messaging</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>Telehealth Video</td>
+            <td>Integrated WebRTC/Daily.co — no external app. Waiting room, mobile + desktop</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>EHR Lite (SOAP)</td>
+            <td>Basic SOAP note templates, document upload, treatment plan tracking</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>Billing &amp; Invoicing</td>
+            <td>Invoice generation, payment record tracking, Stripe pre-wired (activation-ready)</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>GDPR Compliance Layer</td>
+            <td>Role-based access, audit logs, consent management, right-to-erasure workflow</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>DNS Setup Guidance</td>
+            <td>DNS records for harmonyphysio.co.uk + MX/SPF/DKIM for professional email</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>Data Flow Diagram</td>
+            <td>One-page service map: all components, regions, encryption states — NHS/CQC ready</td>
+            <td style="text-align:center" class="tick">✓</td>
+          </tr>
+          <tr>
+            <td>DTAC Self-Assessment Pack</td>
+            <td>Completed DTAC checklist, DPA template, NHS DSPT evidence summary</td>
+            <td style="text-align:center" class="tick">✓ <span style="font-size:11px;color:var(--muted)">(add-on)</span></td>
+          </tr>
+          <tr>
+            <td>Mobile App (iOS/Android)</td>
+            <td>Not included — available as upgrade to Premium</td>
+            <td style="text-align:center;color:var(--muted)">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card">
+    <h2 class="card-title">Project Timeline — 21 Days</h2>
+    <div class="timeline">
+      <div class="t-row">
+        <span class="t-day">Day 1–2</span>
+        <div>
+          <p class="t-label">Kickoff &amp; Requirements Sign-off</p>
+          <p class="t-note">Buyer requirements form reviewed · tech stack confirmed · data residency region locked</p>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day">Day 3–5</span>
+        <div>
+          <p class="t-label">Design &amp; Architecture — Milestone 1 Delivery</p>
+          <p class="t-note">Wireframes, UI mockups, database schema, GDPR data flow diagram · <strong>your approval required to proceed</strong></p>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day">Day 6–16</span>
+        <div>
+          <p class="t-label">Full Build</p>
+          <p class="t-note">Booking + portal + telehealth + EHR + billing · deployed to staging environment for your review</p>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day">Day 17–19</span>
+        <div>
+          <p class="t-label">Revision Rounds (up to 3)</p>
+          <p class="t-note">Consolidated feedback applied · DTAC documentation pack delivered</p>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day m2">Day 20–21</span>
+        <div>
+          <p class="t-label">Production Deployment — Milestone 2 Delivery</p>
+          <p class="t-note">Live deployment to harmonyphysio.co.uk · DNS configuration · 7-day post-launch support begins</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compliance -->
+  <div class="card">
+    <h2 class="card-title">Compliance &amp; Data Residency</h2>
+    <ul class="comp-list">
+      <li>
+        <span class="icon">🔒</span>
+        <div>
+          <strong>GDPR (UK &amp; EU)</strong>
+          <span>Consent management, right-to-erasure, data minimisation principles, DPA template included</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🏥</span>
+        <div>
+          <strong>NHS DTAC &amp; DSPT</strong>
+          <span>DTAC self-assessment checklist completed for this platform · DSPT evidence summary ready to submit</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🌍</span>
+        <div>
+          <strong>Data Residency — UK only</strong>
+          <span>All data physically stored in AWS eu-west-2 (London) · zero transit outside UK/EU at any point</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🎥</span>
+        <div>
+          <strong>Video Session Routing</strong>
+          <span>Daily.co configured for EU region routing · session data does not traverse US infrastructure</span>
+        </div>
+      </li>
+    </ul>
+
+    <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:20px 0 10px;">Data Infrastructure Map</p>
+    <div class="dataflow">
+      <div class="df-node">
+        <p class="df-name">Web Application</p>
+        <p class="df-loc">🇬🇧 AWS eu-west-2</p>
+        <p class="df-enc">Next.js · HTTPS/TLS 1.3</p>
+      </div>
+      <div class="df-node">
+        <p class="df-name">Database</p>
+        <p class="df-loc">🇬🇧 AWS RDS London</p>
+        <p class="df-enc">PostgreSQL · AES-256 at rest</p>
+      </div>
+      <div class="df-node">
+        <p class="df-name">File Storage</p>
+        <p class="df-loc">🇬🇧 AWS S3 eu-west-2</p>
+        <p class="df-enc">Patient docs · AES-256</p>
+      </div>
+      <div class="df-node">
+        <p class="df-name">Video Calls</p>
+        <p class="df-loc">🇪🇺 Daily.co EU region</p>
+        <p class="df-enc">WebRTC E2E encrypted</p>
+      </div>
+      <div class="df-node">
+        <p class="df-name">Email (Reminders)</p>
+        <p class="df-loc">🇪🇺 EU-hosted SMTP</p>
+        <p class="df-enc">SPF + DKIM configured</p>
+      </div>
+      <div class="df-node">
+        <p class="df-name">Backups</p>
+        <p class="df-loc">🇬🇧 AWS eu-west-2</p>
+        <p class="df-enc">Daily · 30-day retention</p>
+      </div>
+    </div>
+    <div class="notice">
+      <strong>Note for NHS partner:</strong> A full one-page data flow diagram with service-level encryption detail will be delivered as part of this project and can be provided directly to your NHS IG contact or CQC inspector upon request.
+    </div>
+  </div>
+
+  <!-- Cost -->
+  <div class="card">
+    <h2 class="card-title">Investment &amp; Payment Schedule</h2>
+    <table class="cost-table">
+      <tbody>
+        <tr>
+          <td>Standard Package — Practice Hub</td>
+          <td class="teal">$650</td>
+        </tr>
+        <tr>
+          <td>DTAC/DSPT Documentation Add-on</td>
+          <td class="teal">$200</td>
+        </tr>
+        <tr>
+          <td>Stripe Pre-wiring (activation-ready billing)<br><span class="label-muted">Included at no charge — early reference client</span></td>
+          <td style="color:var(--muted)">$0</td>
+        </tr>
+        <tr class="total-row">
+          <td>Total</td>
+          <td>$850</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:20px 0 10px;">Fiverr Milestone Schedule</p>
+    <div class="milestone-row">
+      <div class="ms-card">
+        <p class="ms-num">Milestone 1</p>
+        <p class="ms-amount">$425</p>
+        <p class="ms-trigger">Paid when order is accepted</p>
+        <p class="ms-items">Design · Wireframes · Architecture · Data flow diagram · Held in Fiverr escrow until your approval</p>
+      </div>
+      <div class="ms-card">
+        <p class="ms-num">Milestone 2</p>
+        <p class="ms-amount">$425</p>
+        <p class="ms-trigger">Funded after Milestone 1 approval</p>
+        <p class="ms-items">Full platform delivery · DTAC pack · DNS setup · Production deployment · 7-day support</p>
+      </div>
+    </div>
+    <div class="notice" style="margin-top:14px;">
+      <strong>All payments via Fiverr platform only.</strong> Funds are held in Fiverr escrow and released only upon your explicit approval at each milestone. No external transfers, no invoices outside the platform.
+    </div>
+  </div>
+
+  <!-- Ongoing costs -->
+  <div class="card">
+    <h2 class="card-title">Ongoing Costs After Delivery</h2>
+    <div style="overflow-x:auto;">
+      <table class="scope-table">
+        <thead><tr><th>Service</th><th>Provider</th><th>Est. Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td>Cloud hosting (AWS eu-west-2)</td><td>Amazon Web Services</td><td>~£25–45/month</td></tr>
+          <tr><td>Video calls (telehealth)</td><td>Daily.co</td><td>Free up to 2,000 min · ~£12–15 beyond</td></tr>
+          <tr><td>Professional email</td><td>Google Workspace</td><td>~£9–10/month (2 users)</td></tr>
+          <tr><td>Domain renewal</td><td>GoDaddy</td><td>~£10–15/year</td></tr>
+          <tr><td>SMS reminders</td><td>Twilio / AWS SNS</td><td>~£0.04/SMS · ~£8–12/month at typical volume</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:10px;">Estimated total ongoing: <strong style="color:var(--text)">~£55–80/month</strong> — significantly below SaaS alternatives like Cliniko (£45–200/month) without the ownership and flexibility of a custom build.</p>
+  </div>
+
+  <!-- Signature -->
+  <div class="card">
+    <h2 class="card-title">Agreement &amp; Next Steps</h2>
+    <p style="font-size:13.5px;color:var(--muted);margin-bottom:20px;">This brief summarises the agreed scope, timeline, compliance requirements and payment terms. Proceed by placing the order via Fiverr using the custom offer link to be sent separately.</p>
+    <div class="sig-block">
+      <div class="sig-field">
+        <span class="label">Prepared by</span>
+        <span class="val">Kontra Digital</span>
+        <span>Account Director</span>
+        <div class="sig-line"></div>
+      </div>
+      <div class="sig-field">
+        <span class="label">Client</span>
+        <span class="val">Harmony Physiotherapy Clinic</span>
+        <span>harmonyphysio.co.uk</span>
+        <div class="sig-line"></div>
+      </div>
+      <div class="sig-field">
+        <span class="label">Date</span>
+        <span class="val">21 September 2026</span>
+        <span>Valid 14 days</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">This document is confidential and prepared solely for Harmony Physiotherapy Clinic. Kontra Digital · Fiverr: @kontadigital</p>
+
+</div>
+</body>
+</html>

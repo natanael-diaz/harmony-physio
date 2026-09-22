@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harmony Physio — Product Requirements Document</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --navy:    #0B3D6B;
+  --teal:    #15A898;
+  --teal-bg: #E8F7F6;
+  --accent:  #E8622A;
+  --bg:      #F5F7FA;
+  --surface: #FFFFFF;
+  --border:  #D8E2EE;
+  --text:    #1A2A3A;
+  --muted:   #5A6E84;
+  --tag-bg:  #EDF2F8;
+  --critical:#C0392B;
+  --warn:    #D4850A;
+  --ok:      #1A8752;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #0D1B2A;
+    --surface: #122032;
+    --border:  #1E3250;
+    --text:    #D8E8F4;
+    --muted:   #7A9AB8;
+    --tag-bg:  #162840;
+    --teal-bg: #0E2D38;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+  padding: 32px 24px;
+}
+.page { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+/* Header */
+.header {
+  background: var(--navy);
+  border-radius: 14px;
+  padding: 36px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: ''; position: absolute; bottom: -60px; right: -60px;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: var(--teal); opacity: .07;
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.brand { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
+.doc-title { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(22px, 4vw, 30px); color: #fff; line-height: 1.2; }
+.doc-sub { font-size: 13px; color: rgba(255,255,255,.55); margin-top: 6px; }
+.status-badge {
+  background: rgba(21,168,152,.2); border: 1px solid rgba(21,168,152,.4);
+  border-radius: 6px; padding: 6px 14px; font-size: 11px; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase; color: #4DD9CF; white-space: nowrap; flex-shrink: 0;
+}
+.meta-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.meta-pills span {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 99px; padding: 3px 12px; font-size: 12px; color: rgba(255,255,255,.75);
+}
+
+/* Card */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 30px; }
+.card-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: var(--navy); margin-bottom: 16px; }
+@media (prefers-color-scheme: dark) { .card-title { color: #8DC8F0; } }
+.section-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
+
+/* TOC */
+.toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.toc-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--text); text-decoration: none;
+  transition: border-color .15s;
+}
+.toc-item:hover { border-color: var(--teal); color: var(--teal); }
+.toc-num { font-size: 10px; font-weight: 700; color: var(--muted); min-width: 20px; }
+
+/* Personas */
+.persona-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.persona-card { border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.persona-icon { font-size: 28px; margin-bottom: 8px; }
+.persona-name { font-weight: 700; font-size: 14px; color: var(--navy); }
+@media (prefers-color-scheme: dark) { .persona-name { color: #8DC8F0; } }
+.persona-role { font-size: 12px; color: var(--teal); font-weight: 600; margin-bottom: 8px; }
+.persona-goals { list-style: none; font-size: 12.5px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.persona-goals li::before { content: '→ '; color: var(--teal); }
+
+/* User stories table */
+.story-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.story-table th {
+  text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); background: var(--tag-bg);
+}
+.story-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.story-table tr:last-child td { border-bottom: none; }
+.story-table td:first-child { white-space: nowrap; }
+.pri-badge {
+  display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.pri-must  { background: rgba(192,57,43,.12); color: var(--critical); }
+.pri-should{ background: rgba(212,133,10,.12); color: var(--warn); }
+.pri-could { background: rgba(26,135,82,.12);  color: var(--ok); }
+
+/* Feature modules */
+.module { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 12px; }
+.module:first-of-type { margin-top: 0; }
+.module-header {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--tag-bg); padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.module-icon { font-size: 20px; }
+.module-name { font-weight: 700; font-size: 14px; color: var(--navy); }
+@media (prefers-color-scheme: dark) { .module-name { color: #8DC8F0; } }
+.module-tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--teal); }
+.req-list { list-style: none; display: flex; flex-direction: column; }
+.req-list li { padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; gap: 10px; align-items: baseline; }
+.req-list li:last-child { border-bottom: none; }
+.req-id { font-size: 10.5px; font-weight: 700; color: var(--muted); white-space: nowrap; min-width: 52px; }
+
+/* NFR grid */
+.nfr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.nfr-card { border: 1px solid var(--border); border-radius: 9px; padding: 16px; }
+.nfr-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; color: var(--navy); }
+@media (prefers-color-scheme: dark) { .nfr-title { color: #8DC8F0; } }
+.nfr-value { font-size: 12.5px; color: var(--muted); }
+.nfr-metric { font-weight: 700; color: var(--teal); display: block; margin-top: 4px; font-size: 13.5px; }
+
+/* Tech stack */
+.stack-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.stack-table th {
+  text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); background: var(--tag-bg);
+}
+.stack-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.stack-table tr:last-child td { border-bottom: none; }
+.stack-table td:first-child { font-weight: 600; color: var(--navy); width: 30%; white-space: nowrap; }
+@media (prefers-color-scheme: dark) { .stack-table td:first-child { color: #8DC8F0; } }
+.tech-badge {
+  display: inline-block; background: var(--teal-bg); border: 1px solid rgba(21,168,152,.3);
+  border-radius: 4px; padding: 1px 8px; font-size: 12px; font-weight: 600; color: var(--teal); margin-right: 4px;
+}
+
+/* Acceptance criteria */
+.ac-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ac-list li {
+  display: flex; gap: 10px; align-items: flex-start; padding: 9px 14px;
+  background: var(--teal-bg); border-radius: 7px; font-size: 13px;
+}
+.ac-list li .tick { color: var(--teal); font-weight: 700; flex-shrink: 0; }
+
+/* Compliance */
+.comp-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.comp-list li {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--teal-bg); border-radius: 7px; padding: 10px 14px; font-size: 13.5px;
+}
+.comp-list li .icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.comp-list li strong { display: block; font-weight: 600; }
+.comp-list li span { color: var(--muted); font-size: 12.5px; }
+
+/* Scope table */
+.scope-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.scope-table th {
+  text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); background: var(--tag-bg);
+}
+.scope-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.scope-table tr:last-child td { border-bottom: none; }
+.scope-table td:first-child { font-weight: 600; color: var(--navy); white-space: nowrap; }
+@media (prefers-color-scheme: dark) { .scope-table td:first-child { color: #8DC8F0; } }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.t-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.t-row:last-child { border-bottom: none; }
+.t-day { font-size: 11px; font-weight: 700; color: var(--surface); background: var(--navy); border-radius: 5px; padding: 3px 9px; flex-shrink: 0; margin-top: 2px; white-space: nowrap; }
+.t-day.m1 { background: var(--teal); }
+.t-day.m2 { background: var(--accent); }
+.t-label { font-weight: 600; }
+.t-note { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.t-deliverables { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
+.t-del { background: var(--tag-bg); border-radius: 4px; padding: 2px 8px; font-size: 11.5px; color: var(--muted); }
+
+/* Notice */
+.notice {
+  background: var(--teal-bg); border-left: 3px solid var(--teal); border-radius: 0 8px 8px 0;
+  padding: 12px 16px; font-size: 13px; color: var(--text); margin-top: 14px;
+}
+.notice strong { color: var(--teal); }
+
+/* Footer */
+.footer { text-align: center; font-size: 11.5px; color: var(--muted); padding-top: 8px; }
+.revision-log { font-size: 12.5px; }
+.revision-log table { width: 100%; border-collapse: collapse; }
+.revision-log td { padding: 7px 12px; border-bottom: 1px solid var(--border); }
+.revision-log tr:last-child td { border-bottom: none; }
+.revision-log td:first-child { color: var(--muted); white-space: nowrap; width: 90px; }
+
+@media (max-width: 600px) {
+  body { padding: 20px 16px; }
+  .header { padding: 26px 22px; }
+  .card { padding: 22px 18px; }
+  .persona-grid, .nfr-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div>
+        <p class="brand">PRD · Kontra Digital</p>
+        <h1 class="doc-title">Harmony Physio<br>Product Requirements Document</h1>
+        <p class="doc-sub">Client: Harmony Physiotherapy Clinic · harmonyphysio.co.uk</p>
+      </div>
+      <span class="status-badge">v1.0 Draft</span>
+    </div>
+    <div class="meta-pills">
+      <span>📅 21 September 2026</span>
+      <span>⏱ 21-Day Delivery</span>
+      <span>🇬🇧 AWS eu-west-2</span>
+      <span>🔒 GDPR + NHS DTAC</span>
+      <span>💰 $850 Total</span>
+    </div>
+  </header>
+
+  <!-- Table of Contents -->
+  <div class="card">
+    <p class="section-eyebrow">Contents</p>
+    <h2 class="card-title">Document Structure</h2>
+    <div class="toc-grid">
+      <a href="#overview" class="toc-item"><span class="toc-num">01</span> Product Overview</a>
+      <a href="#personas" class="toc-item"><span class="toc-num">02</span> User Personas</a>
+      <a href="#stories" class="toc-item"><span class="toc-num">03</span> User Stories</a>
+      <a href="#functional" class="toc-item"><span class="toc-num">04</span> Functional Requirements</a>
+      <a href="#nfr" class="toc-item"><span class="toc-num">05</span> Non-Functional Requirements</a>
+      <a href="#techstack" class="toc-item"><span class="toc-num">06</span> Tech Stack</a>
+      <a href="#compliance" class="toc-item"><span class="toc-num">07</span> Compliance</a>
+      <a href="#timeline" class="toc-item"><span class="toc-num">08</span> Timeline & Milestones</a>
+      <a href="#acceptance" class="toc-item"><span class="toc-num">09</span> Acceptance Criteria</a>
+      <a href="#outofscope" class="toc-item"><span class="toc-num">10</span> Out of Scope</a>
+    </div>
+  </div>
+
+  <!-- 01 Overview -->
+  <div class="card" id="overview">
+    <p class="section-eyebrow">Section 01</p>
+    <h2 class="card-title">Product Overview</h2>
+    <p style="font-size:13.5px;margin-bottom:14px;">
+      Harmony Physio Platform is a bespoke clinical web application built for Harmony Physiotherapy Clinic (harmonyphysio.co.uk). It replaces fragmented third-party SaaS tools with a single, owned platform covering patient booking, telehealth, clinical records, billing, and secure communications — all hosted within UK data residency boundaries and compliant with GDPR, NHS DTAC, and DSPT requirements.
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="scope-table">
+        <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Product Name</td><td>Harmony Physio Platform</td></tr>
+          <tr><td>Client</td><td>Harmony Physiotherapy Clinic · harmonyphysio.co.uk</td></tr>
+          <tr><td>Vendor</td><td>Kontra Digital</td></tr>
+          <tr><td>Platform Type</td><td>Custom web application (not a SaaS resale)</td></tr>
+          <tr><td>Primary Goal</td><td>End-to-end patient management: self-booking → consultation → billing → clinical records</td></tr>
+          <tr><td>Secondary Goal</td><td>NHS DTAC compliance evidence, enabling NHS referrals and CQC inspection readiness</td></tr>
+          <tr><td>Deployment Target</td><td>AWS eu-west-2 (London) — all data physically UK-resident</td></tr>
+          <tr><td>Delivery</td><td>21 days from order acceptance · Fiverr milestone-based</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notice" style="margin-top:16px;">
+      <strong>Strategic context:</strong> Monthly ownership cost (~£55–80/month) is 50–70% lower than comparable SaaS platforms (e.g. Cliniko at £45–200/month), while providing full data ownership and NHS compliance documentation that off-the-shelf tools do not supply.
+    </div>
+  </div>
+
+  <!-- 02 Personas -->
+  <div class="card" id="personas">
+    <p class="section-eyebrow">Section 02</p>
+    <h2 class="card-title">User Personas</h2>
+    <div class="persona-grid">
+      <div class="persona-card">
+        <div class="persona-icon">🧑‍⚕️</div>
+        <p class="persona-name">Physiotherapist / Clinician</p>
+        <p class="persona-role">Primary clinical user</p>
+        <ul class="persona-goals">
+          <li>Write and access SOAP notes quickly during sessions</li>
+          <li>Start telehealth calls without leaving the platform</li>
+          <li>View patient history, documents, and treatment plans</li>
+          <li>Upload clinical documents and manage consent</li>
+        </ul>
+      </div>
+      <div class="persona-card">
+        <div class="persona-icon">🧑‍💼</div>
+        <p class="persona-name">Admin / Receptionist</p>
+        <p class="persona-role">Operations user</p>
+        <ul class="persona-goals">
+          <li>Manage appointment calendar and rescheduling</li>
+          <li>Generate invoices and track payment status</li>
+          <li>Handle incoming booking requests</li>
+          <li>Manage patient records and onboarding</li>
+        </ul>
+      </div>
+      <div class="persona-card">
+        <div class="persona-icon">🧑‍🦽</div>
+        <p class="persona-name">Patient</p>
+        <p class="persona-role">External end user</p>
+        <ul class="persona-goals">
+          <li>Book, reschedule, or cancel appointments online</li>
+          <li>Attend telehealth sessions via browser (no app required)</li>
+          <li>View appointment history and upcoming sessions</li>
+          <li>Access and download clinical notes and documents</li>
+          <li>Complete digital consent forms</li>
+        </ul>
+      </div>
+      <div class="persona-card">
+        <div class="persona-icon">🔐</div>
+        <p class="persona-name">Platform Owner / IG Lead</p>
+        <p class="persona-role">Compliance & security</p>
+        <ul class="persona-goals">
+          <li>Access audit logs for GDPR/CQC inquiries</li>
+          <li>Manage staff roles and access permissions</li>
+          <li>Process right-to-erasure requests</li>
+          <li>Review DTAC/DSPT evidence documentation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 User Stories -->
+  <div class="card" id="stories">
+    <p class="section-eyebrow">Section 03</p>
+    <h2 class="card-title">User Stories</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Priority: <span class="pri-badge pri-must">Must Have</span> = MVP blocker &nbsp; <span class="pri-badge pri-should">Should Have</span> = important but not blocking &nbsp; <span class="pri-badge pri-could">Could Have</span> = nice-to-have if time allows</p>
+    <div style="overflow-x:auto;">
+      <table class="story-table">
+        <thead><tr><th>ID</th><th>As a…</th><th>I want to…</th><th>So that…</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>US-01</td><td>Patient</td><td>Book an appointment online</td><td>I can secure a slot without calling the clinic</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-02</td><td>Patient</td><td>Receive SMS and email reminders</td><td>I don't miss my appointments</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-03</td><td>Patient</td><td>Join a telehealth session from my browser</td><td>I don't need to install any app</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-04</td><td>Patient</td><td>View my appointment history and clinical notes</td><td>I can track my treatment progress</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-05</td><td>Patient</td><td>Complete and sign consent forms digitally</td><td>I don't need to attend in person just to sign paperwork</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-06</td><td>Patient</td><td>Send secure messages to the clinic</td><td>I can ask questions confidentially</td><td><span class="pri-badge pri-should">Should Have</span></td></tr>
+          <tr><td>US-07</td><td>Patient</td><td>Request deletion of my data</td><td>I can exercise my GDPR right-to-erasure</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-08</td><td>Physiotherapist</td><td>Write SOAP notes during or after a session</td><td>I have a structured clinical record for each patient</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-09</td><td>Physiotherapist</td><td>View a patient's full treatment history</td><td>I can provide informed continuity of care</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-10</td><td>Physiotherapist</td><td>Start a telehealth waiting room</td><td>Patients can join my video session at the right time</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-11</td><td>Physiotherapist</td><td>Upload documents to a patient's record</td><td>Clinical files are stored securely and accessible later</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-12</td><td>Admin</td><td>Manage the appointment calendar</td><td>I can view, reschedule, and cancel bookings in one place</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-13</td><td>Admin</td><td>Generate invoices for completed sessions</td><td>Patients receive accurate billing documentation</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-14</td><td>Admin</td><td>Track payment status per invoice</td><td>I know which invoices are paid, outstanding, or overdue</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-15</td><td>Admin</td><td>Activate Stripe payment collection when ready</td><td>Patients can pay online (activation-ready, not enabled by default)</td><td><span class="pri-badge pri-should">Should Have</span></td></tr>
+          <tr><td>US-16</td><td>IG Lead</td><td>View full audit logs of data access and changes</td><td>I can evidence GDPR and CQC compliance</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-17</td><td>IG Lead</td><td>Assign and revoke staff role permissions</td><td>Only authorised staff can access sensitive data</td><td><span class="pri-badge pri-must">Must Have</span></td></tr>
+          <tr><td>US-18</td><td>Admin</td><td>Export a patient's data record</td><td>I can fulfil Subject Access Requests under GDPR</td><td><span class="pri-badge pri-should">Should Have</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 04 Functional Requirements -->
+  <div class="card" id="functional">
+    <p class="section-eyebrow">Section 04</p>
+    <h2 class="card-title">Functional Requirements</h2>
+
+    <!-- Module: Booking -->
+    <div class="module">
+      <div class="module-header">
+        <span class="module-icon">📅</span>
+        <span class="module-name">M1 — Online Booking Portal</span>
+        <span class="module-tag">Must Have</span>
+      </div>
+      <ul class="req-list">
+        <li><span class="req-id">FR-1.1</span>Patient-facing booking interface accessible without login</li>
+        <li><span class="req-id">FR-1.2</span>Real-time availability calendar showing open appointment slots</li>
+        <li><span class="req-id">FR-1.3</span>Appointment type selection (in-person / telehealth)</li>
+        <li><span class="req-id">FR-1.4</span>Automated email confirmation sent on booking, rescheduling, and cancellation</li>
+        <li><span class="req-id">FR-1.5</span>Automated SMS reminder sent 24h and 1h before appointment</li>
+        <li><span class="req-id">FR-1.6</span>Patient self-service reschedule and cancellation (up to configurable cut-off time)</li>
+        <li><span class="req-id">FR-1.7</span>Admin calendar view: day/week/month with drag-to-reschedule</li>
+        <li><span class="req-id">FR-1.8</span>Blocked-time management for staff unavailability</li>
+      </ul>
+    </div>
+
+    <!-- Module: Patient Portal -->
+    <div class="module">
+      <div class="module-header">
+        <span class="module-icon">🧑‍💻</span>
+        <span class="module-name">M2 — Patient Portal</span>
+        <span class="module-tag">Must Have</span>
+      </div>
+      <ul class="req-list">
+        <li><span class="req-id">FR-2.1</span>Secure patient account registration and login (email + password, MFA optional)</li>
+        <li><span class="req-id">FR-2.2</span>Dashboard showing upcoming and past appointments</li>
+        <li><span class="req-id">FR-2.3</span>Access to own clinical notes (view-only) released by clinician</li>
+        <li><span class="req-id">FR-2.4</span>Document library: download uploaded clinical files and results</li>
+        <li><span class="req-id">FR-2.5</span>Digital consent forms: display, acknowledge, and e-sign</li>
+        <li><span class="req-id">FR-2.6</span>Secure inbox: thread-based messaging with clinic staff</li>
+        <li><span class="req-id">FR-2.7</span>GDPR self-service: data export request and right-to-erasure request workflow</li>
+        <li><span class="req-id">FR-2.8</span>Notification preferences management (email/SMS on/off)</li>
+      </ul>
+    </div>
+
+    <!-- Module: Telehealth -->
+    <div class="module">
+      <div class="module-header">
+        <span class="module-icon">🎥</span>
+        <span class="module-name">M3 — Telehealth Video</span>
+        <span class="module-tag">Must Have</span>
+      </div>
+      <ul class="req-list">
+        <li><span class="req-id">FR-3.1</span>WebRTC-based video call via Daily.co, integrated into the platform (no external app)</li>
+        <li><span class="req-id">FR-3.2</span>Patient waiting room: patient waits until clinician admits them</li>
+        <li><span class="req-id">FR-3.3</span>Clinician dashboard: admit/reject waiting patient, end session</li>
+        <li><span class="req-id">FR-3.4</span>Mobile-responsive video UI (iOS Safari, Android Chrome)</li>
+        <li><span class="req-id">FR-3.5</span>Pre-call device check: camera, microphone, speaker test</li>
+        <li><span class="req-id">FR-3.6</span>Session routing via Daily.co EU region (no US infrastructure transit)</li>
+        <li><span class="req-id">FR-3.7</span>Session link auto-generated and sent to patient on booking</li>
+      </ul>
+    </div>
+
+    <!-- Module: EHR Lite -->
+    <div class="module">
+      <div class="module-header">
+        <span class="module-icon">🗂</span>
+        <span class="module-name">M4 — EHR Lite (SOAP Records)</span>
+        <span class="module-tag">Must Have</span>
+      </div>
+      <ul class="req-list">
+        <li><span class="req-id">FR-4.1</span>Structured SOAP note template (Subjective, Objective, Assessment, Plan) per session</li>
+        <li><span class="req-id">FR-4.2</span>Free-text and structured field entry within each SOAP section</li>
+        <li><span class="req-id">FR-4.3</span>Treatment plan tracking: goals, progress markers, review dates</li>
+        <li><span class="req-id">FR-4.4</span>Document upload (PDF, JPEG, PNG) attached to patient record</li>
+        <li><span class="req-id">FR-4.5</span>Chronological patient timeline: all notes, documents, and sessions</li>
+        <li><span class="req-id">FR-4.6</span>Clinician-controlled visibility: choose which notes patient can see in portal</li>
+        <li><span class="req-id">FR-4.7</span>Note versioning: edits logged with timestamp and author</li>
+      </ul>
+    </div>
+
+    <!-- Module: Billing -->
+    <div class="module">
+      <div class="module-header">
+        <span class="module-icon">💳</span>
+        <span class="module-name">M5 — Billing & Invoicing</span>
+        <span class="module-tag">Must Have</span>
+      </div>
+      <ul class="req-list">
+        <li><span class="req-id">FR-5.1</span>Invoice generation per appointment or manually triggered</li>
+        <li><span class="req-id">FR-5.2</span>Invoice fields: service description, date, amount, VAT, patient details, clinic details</li>
+        <li><span class="req-id">FR-5.3</span>Invoice status tracking: Draft → Sent → Paid / Overdue</li>
+        <li><span class="req-id">FR-5.4</span>Manual payment recording (cash, BACS, insurance)</li>
+        <li><span class="req-id">FR-5.5</span>Stripe integration pre-wired (keys configurable, online payment activation-ready)</li>
+        <li><span class="req-id">FR-5.6</span>PDF invoice download and email delivery to patient</li>
+        <li><span class="req-id">FR-5.7</span>Billing summary view: outstanding, paid, and overdue totals</li>
+      </ul>
+    </div>
+
+    <!-- Module: GDPR -->
+    <div class="module">
+      <div class="module-header">
+        <span class="module-icon">🔒</span>
+        <span class="module-name">M6 — GDPR Compliance Layer</span>
+        <span class="module-tag">Must Have</span>
+      </div>
+      <ul class="req-list">
+        <li><span class="req-id">FR-6.1</span>Role-based access control (RBAC): Patient, Clinician, Admin, IG Lead roles</li>
+        <li><span class="req-id">FR-6.2</span>Immutable audit log: every data read, write, export, and deletion timestamped with user ID</li>
+        <li><span class="req-id">FR-6.3</span>Consent management: granular consent records per patient with timestamp and version</li>
+        <li><span class="req-id">FR-6.4</span>Right-to-erasure workflow: request → IG review → anonymisation/deletion → confirmation log</li>
+        <li><span class="req-id">FR-6.5</span>Data minimisation: only fields necessary for clinical care are collected at registration</li>
+        <li><span class="req-id">FR-6.6</span>Session timeout after 15 minutes of inactivity for clinical staff accounts</li>
+        <li><span class="req-id">FR-6.7</span>Privacy notice presented and acknowledged at patient registration</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 05 Non-Functional Requirements -->
+  <div class="card" id="nfr">
+    <p class="section-eyebrow">Section 05</p>
+    <h2 class="card-title">Non-Functional Requirements</h2>
+    <div class="nfr-grid">
+      <div class="nfr-card">
+        <p class="nfr-title">Performance</p>
+        <p class="nfr-value">Page load time (LCP)</p>
+        <span class="nfr-metric">≤ 2.5s on 4G</span>
+        <p class="nfr-value" style="margin-top:8px;">API response (non-video)</p>
+        <span class="nfr-metric">≤ 300ms p95</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Availability</p>
+        <p class="nfr-value">Platform uptime SLA</p>
+        <span class="nfr-metric">≥ 99.5% monthly</span>
+        <p class="nfr-value" style="margin-top:8px;">Planned maintenance window</p>
+        <span class="nfr-metric">Off-peak (Sun 02:00–04:00 GMT)</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Security</p>
+        <p class="nfr-value">Transport encryption</p>
+        <span class="nfr-metric">TLS 1.3 (HTTPS only)</span>
+        <p class="nfr-value" style="margin-top:8px;">Data at rest</p>
+        <span class="nfr-metric">AES-256 (RDS + S3)</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Data Residency</p>
+        <p class="nfr-value">Primary data region</p>
+        <span class="nfr-metric">AWS eu-west-2 (London)</span>
+        <p class="nfr-value" style="margin-top:8px;">Video routing</p>
+        <span class="nfr-metric">Daily.co EU region only</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Accessibility</p>
+        <p class="nfr-value">WCAG compliance target</p>
+        <span class="nfr-metric">WCAG 2.1 AA</span>
+        <p class="nfr-value" style="margin-top:8px;">Keyboard navigation</p>
+        <span class="nfr-metric">Full keyboard-accessible UI</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Browser Support</p>
+        <p class="nfr-value">Desktop</p>
+        <span class="nfr-metric">Chrome 110+, Firefox 110+, Edge 110+, Safari 16+</span>
+        <p class="nfr-value" style="margin-top:8px;">Mobile</p>
+        <span class="nfr-metric">iOS Safari 16+, Android Chrome 110+</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Backup & Recovery</p>
+        <p class="nfr-value">Backup frequency</p>
+        <span class="nfr-metric">Daily automated snapshots</span>
+        <p class="nfr-value" style="margin-top:8px;">Retention / RTO</p>
+        <span class="nfr-metric">30-day retention · RTO ≤ 4h</span>
+      </div>
+      <div class="nfr-card">
+        <p class="nfr-title">Scalability</p>
+        <p class="nfr-value">Initial capacity target</p>
+        <span class="nfr-metric">≤ 500 patients · ≤ 5 staff</span>
+        <p class="nfr-value" style="margin-top:8px;">Architecture</p>
+        <span class="nfr-metric">Stateless app tier — horizontal scale via AWS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 Tech Stack -->
+  <div class="card" id="techstack">
+    <p class="section-eyebrow">Section 06</p>
+    <h2 class="card-title">Technical Architecture & Stack</h2>
+    <div style="overflow-x:auto;">
+      <table class="stack-table">
+        <thead><tr><th>Layer</th><th>Technology</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Frontend</td>
+            <td><span class="tech-badge">Next.js</span><span class="tech-badge">React</span><span class="tech-badge">TypeScript</span></td>
+            <td>SSR for SEO and performance; app deployed to AWS eu-west-2</td>
+          </tr>
+          <tr>
+            <td>Database</td>
+            <td><span class="tech-badge">PostgreSQL</span><span class="tech-badge">AWS RDS</span></td>
+            <td>London region; AES-256 encryption at rest; automated daily snapshots</td>
+          </tr>
+          <tr>
+            <td>File Storage</td>
+            <td><span class="tech-badge">AWS S3</span></td>
+            <td>eu-west-2 bucket; AES-256; presigned URLs for document download</td>
+          </tr>
+          <tr>
+            <td>Video / Telehealth</td>
+            <td><span class="tech-badge">Daily.co</span><span class="tech-badge">WebRTC</span></td>
+            <td>EU region routing; E2E encrypted; no US infrastructure transit</td>
+          </tr>
+          <tr>
+            <td>Email</td>
+            <td><span class="tech-badge">EU SMTP</span></td>
+            <td>SPF + DKIM configured; transactional reminders and notifications</td>
+          </tr>
+          <tr>
+            <td>SMS</td>
+            <td><span class="tech-badge">Twilio</span> or <span class="tech-badge">AWS SNS</span></td>
+            <td>~£0.04/SMS; 24h and 1h appointment reminders</td>
+          </tr>
+          <tr>
+            <td>Payments</td>
+            <td><span class="tech-badge">Stripe</span></td>
+            <td>Pre-wired (keys configured, activation-ready); not enabled by default at launch</td>
+          </tr>
+          <tr>
+            <td>Authentication</td>
+            <td><span class="tech-badge">NextAuth.js</span> or <span class="tech-badge">Supabase Auth</span></td>
+            <td>JWT session tokens; 15-min idle timeout for clinical staff</td>
+          </tr>
+          <tr>
+            <td>Infrastructure</td>
+            <td><span class="tech-badge">AWS</span><span class="tech-badge">eu-west-2</span></td>
+            <td>App + DB + Storage all London-region; no multi-region data replication</td>
+          </tr>
+          <tr>
+            <td>DNS</td>
+            <td><span class="tech-badge">harmonyphysio.co.uk</span></td>
+            <td>A/CNAME to AWS; MX/SPF/DKIM for professional email; guidance included</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 07 Compliance -->
+  <div class="card" id="compliance">
+    <p class="section-eyebrow">Section 07</p>
+    <h2 class="card-title">Compliance & Regulatory Requirements</h2>
+    <ul class="comp-list">
+      <li>
+        <span class="icon">🔒</span>
+        <div>
+          <strong>UK GDPR / Data Protection Act 2018</strong>
+          <span>Lawful basis for processing: legitimate interest (clinical care). Consent management, right-to-erasure workflow, data minimisation, privacy notice at registration, Subject Access Request support, DPA template provided to client.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🏥</span>
+        <div>
+          <strong>NHS DTAC (Digital Technology Assessment Criteria)</strong>
+          <span>Completed DTAC self-assessment checklist submitted with Milestone 2. Evidence includes: data flow diagram, security controls documentation, GDPR measures, and clinical safety considerations.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">📋</span>
+        <div>
+          <strong>NHS DSPT (Data Security & Protection Toolkit)</strong>
+          <span>DSPT evidence summary delivered as part of DTAC add-on pack. Formatted for direct submission to NHS IG contact or CQC inspector.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🌍</span>
+        <div>
+          <strong>Data Residency — UK Only</strong>
+          <span>All personally identifiable data physically stored in AWS eu-west-2 (London). Zero transit outside UK/EU at any point. Video sessions routed via Daily.co EU region only.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">📜</span>
+        <div>
+          <strong>CQC Inspection Readiness</strong>
+          <span>One-page data flow diagram with service-level encryption detail provided. Can be supplied directly to NHS IG contact or CQC inspector upon request. Audit logs exportable for inspection evidence.</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 08 Timeline -->
+  <div class="card" id="timeline">
+    <p class="section-eyebrow">Section 08</p>
+    <h2 class="card-title">Project Timeline — 21 Days</h2>
+    <div class="timeline">
+      <div class="t-row">
+        <span class="t-day">Day 1–2</span>
+        <div>
+          <p class="t-label">Kickoff & Requirements Sign-off</p>
+          <p class="t-note">Buyer requirements form reviewed · tech stack confirmed · data residency region locked · project access granted</p>
+          <div class="t-deliverables">
+            <span class="t-del">Signed requirements form</span>
+            <span class="t-del">Confirmed tech stack</span>
+            <span class="t-del">Access credentials</span>
+          </div>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day m1">Day 3–5</span>
+        <div>
+          <p class="t-label">Design & Architecture — <strong>Milestone 1 Delivery</strong></p>
+          <p class="t-note">Wireframes, UI mockups, database schema, GDPR data flow diagram · <strong>client approval required before build begins</strong></p>
+          <div class="t-deliverables">
+            <span class="t-del">Wireframes (all modules)</span>
+            <span class="t-del">UI mockups</span>
+            <span class="t-del">DB schema</span>
+            <span class="t-del">Data flow diagram</span>
+          </div>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day">Day 6–16</span>
+        <div>
+          <p class="t-label">Full Build</p>
+          <p class="t-note">All six modules built and integrated · deployed to staging environment for client review</p>
+          <div class="t-deliverables">
+            <span class="t-del">Booking portal</span>
+            <span class="t-del">Patient portal</span>
+            <span class="t-del">Telehealth</span>
+            <span class="t-del">EHR Lite</span>
+            <span class="t-del">Billing</span>
+            <span class="t-del">GDPR layer</span>
+            <span class="t-del">Staging environment</span>
+          </div>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day">Day 17–19</span>
+        <div>
+          <p class="t-label">Revision Rounds (up to 3)</p>
+          <p class="t-note">Consolidated client feedback applied · DTAC documentation pack delivered</p>
+          <div class="t-deliverables">
+            <span class="t-del">Up to 3 revision rounds</span>
+            <span class="t-del">DTAC checklist</span>
+            <span class="t-del">DPA template</span>
+            <span class="t-del">DSPT evidence summary</span>
+          </div>
+        </div>
+      </div>
+      <div class="t-row">
+        <span class="t-day m2">Day 20–21</span>
+        <div>
+          <p class="t-label">Production Deployment — <strong>Milestone 2 Delivery</strong></p>
+          <p class="t-note">Live deployment to harmonyphysio.co.uk · DNS configuration complete · 7-day post-launch support period begins</p>
+          <div class="t-deliverables">
+            <span class="t-del">Production deployment</span>
+            <span class="t-del">DNS configured</span>
+            <span class="t-del">SSL certificates</span>
+            <span class="t-del">7-day support starts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 Acceptance Criteria -->
+  <div class="card" id="acceptance">
+    <p class="section-eyebrow">Section 09</p>
+    <h2 class="card-title">Acceptance Criteria</h2>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Milestone 1 — Design & Architecture</p>
+    <ul class="ac-list" style="margin-bottom:18px;">
+      <li><span class="tick">✓</span>Wireframes provided for all 6 modules (Booking, Patient Portal, Telehealth, EHR, Billing, GDPR)</li>
+      <li><span class="tick">✓</span>UI mockups match agreed brand palette and design direction</li>
+      <li><span class="tick">✓</span>PostgreSQL schema covers all entities: patients, appointments, notes, documents, invoices, consent, audit</li>
+      <li><span class="tick">✓</span>Data flow diagram shows all services, regions, and encryption states</li>
+      <li><span class="tick">✓</span>Client has reviewed and approved all above before Milestone 1 payment released</li>
+    </ul>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Milestone 2 — Full Platform Delivery</p>
+    <ul class="ac-list">
+      <li><span class="tick">✓</span>All user stories marked Must Have (US-01 to US-05, US-07 to US-14, US-16, US-17) are fully functional on production</li>
+      <li><span class="tick">✓</span>Patient can complete a booking, receive reminders, and join a telehealth session end-to-end without assistance</li>
+      <li><span class="tick">✓</span>Clinician can write, save, and view a SOAP note attached to a patient session</li>
+      <li><span class="tick">✓</span>Admin can generate an invoice and record a manual payment</li>
+      <li><span class="tick">✓</span>Audit log captures at least: login events, record reads, note saves, document uploads, and erasure requests</li>
+      <li><span class="tick">✓</span>All data confirmed physically hosted in AWS eu-west-2 (verified via AWS console)</li>
+      <li><span class="tick">✓</span>TLS certificate active and HTTPS enforced on harmonyphysio.co.uk</li>
+      <li><span class="tick">✓</span>DTAC self-assessment checklist, DPA template, and DSPT evidence summary delivered as PDF documents</li>
+      <li><span class="tick">✓</span>DNS records (A, MX, SPF, DKIM) configured and verified</li>
+      <li><span class="tick">✓</span>Platform passes basic accessibility check (WCAG 2.1 AA key criteria)</li>
+    </ul>
+  </div>
+
+  <!-- 10 Out of Scope -->
+  <div class="card" id="outofscope">
+    <p class="section-eyebrow">Section 10</p>
+    <h2 class="card-title">Out of Scope</h2>
+    <div style="overflow-x:auto;">
+      <table class="scope-table">
+        <thead><tr><th>Feature</th><th>Status</th><th>Upgrade Path</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Native Mobile App (iOS / Android)</td>
+            <td style="color:var(--muted)">Not included</td>
+            <td>Available as Premium package upgrade</td>
+          </tr>
+          <tr>
+            <td>Online Payment Collection (Stripe active)</td>
+            <td style="color:var(--muted)">Pre-wired, not activated</td>
+            <td>Client activates by adding Stripe live keys — no code change required</td>
+          </tr>
+          <tr>
+            <td>Full EHR / EPR System</td>
+            <td style="color:var(--muted)">Not included</td>
+            <td>EHR Lite (SOAP) is delivered; full EPR is a separate engagement</td>
+          </tr>
+          <tr>
+            <td>NHS Spine / API Integration</td>
+            <td style="color:var(--muted)">Not included</td>
+            <td>Available as add-on; requires NHS IG agreement</td>
+          </tr>
+          <tr>
+            <td>Automated Insurance / Third-Party Billing</td>
+            <td style="color:var(--muted)">Not included</td>
+            <td>Manual record tracking only in this version</td>
+          </tr>
+          <tr>
+            <td>Multi-location / Multi-clinic Support</td>
+            <td style="color:var(--muted)">Not included</td>
+            <td>Architecture supports future extension; not in current scope</td>
+          </tr>
+          <tr>
+            <td>Custom Reporting / Analytics Dashboard</td>
+            <td style="color:var(--muted)">Not included</td>
+            <td>Basic billing summaries only; full analytics as upgrade</td>
+          </tr>
+          <tr>
+            <td>Post-launch Hosting Support</td>
+            <td style="color:var(--muted)">7-day post-launch only</td>
+            <td>Ongoing maintenance retainer available separately</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Revision log -->
+  <div class="card">
+    <p class="section-eyebrow">Document History</p>
+    <h2 class="card-title">Revision Log</h2>
+    <div class="revision-log">
+      <table>
+        <tbody>
+          <tr><td>v1.0</td><td>21 Sep 2026</td><td>Initial PRD — derived from client project brief. Kontra Digital.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notice" style="margin-top:14px;">
+      <strong>Document status:</strong> This PRD is a draft for client review. Sign-off confirms scope, requirements, and acceptance criteria. Changes after sign-off are subject to a formal change request process and may affect timeline and cost.
+    </div>
+  </div>
+
+  <p class="footer">Confidential · Harmony Physiotherapy Clinic · Prepared by Kontra Digital · harmonyphysio.co.uk</p>
+
+</div>
+</body>
+</html>

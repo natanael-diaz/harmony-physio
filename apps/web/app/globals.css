@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Harmony Physio brand colours */
+    --color-primary: 14 165 233;      /* sky-500 */
+    --color-primary-dark: 2 132 199;  /* sky-600 */
+    --color-accent: 20 184 166;       /* teal-500 */
+    --color-surface: 248 250 252;     /* slate-50 */
+    --color-surface-dark: 15 23 42;   /* slate-900 */
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  /* Focus ring for accessibility (WCAG 2.1 AA) */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sky-500;
+  }
+}
+
+@layer components {
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
+  }
+}
