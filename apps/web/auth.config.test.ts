@@ -1,5 +1,5 @@
 import type { Role } from "@harmony/db";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ROLE_HOME, authConfig } from "./auth.config";
 
@@ -83,5 +83,75 @@ describe("authorized — cross-role access is denied", () => {
     expect(outcome(check("/dashboard/clinician/patients/123", "PATIENT"))).toBe(
       "/dashboard/patient",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Session lifecycle (task 2.7: "session persists across page reload")
+//
+// With the JWT strategy there is no server-side session. A reload is simply the
+// next request presenting the same cookie, so persistence is exactly the
+// behaviour of the jwt callback when it is handed an existing token and no
+// user — and of the session callback projecting that token.
+// ---------------------------------------------------------------------------
+
+const { jwt, session } = authConfig.callbacks;
+
+const signedInAt = new Date("2026-09-22T12:00:00.000Z").getTime();
+
+function tokenAfterSignIn(role: Role) {
+  vi.setSystemTime(signedInAt);
+  return jwt({
+    token: {},
+    user: { id: "user_1", email: "u@harmony.test", role },
+  } as never);
+}
+
+describe("session survives a reload", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("keeps identity on a later request with no user object", async () => {
+    vi.useFakeTimers();
+    const first = (await tokenAfterSignIn("PATIENT")) as Record<string, unknown>;
+
+    // Ten minutes later: a reload, within the 30 minute patient TTL.
+    vi.setSystemTime(signedInAt + 10 * 60 * 1000);
+    const reloaded = await jwt({ token: first } as never);
+
+    expect(reloaded).not.toBeNull();
+    expect((reloaded as Record<string, unknown>).role).toBe("PATIENT");
+    expect((reloaded as Record<string, unknown>).userId).toBe("user_1");
+  });
+
+  it("projects role and id onto the session the page reads", async () => {
+    vi.useFakeTimers();
+    const token = await tokenAfterSignIn("CLINICIAN");
+
+    const result = (await session({
+      session: { user: {}, expires: "" },
+      token,
+    } as never)) as { user: { role: string; id: string }; expires: string };
+
+    expect(result.user.role).toBe("CLINICIAN");
+    expect(result.user.id).toBe("user_1");
+    // Reports the role TTL, not the 30 minute ceiling in session.maxAge.
+    expect(new Date(result.expires).getTime()).toBe(signedInAt + 15 * 60 * 1000);
+  });
+
+  it("expires a staff session at 15 minutes and a patient session at 30", async () => {
+    vi.useFakeTimers();
+    const staff = await tokenAfterSignIn("CLINICIAN");
+    const patient = await tokenAfterSignIn("PATIENT");
+
+    // Twenty minutes on: staff is gone, patient is still valid.
+    vi.setSystemTime(signedInAt + 20 * 60 * 1000);
+    expect(await jwt({ token: staff } as never)).toBeNull();
+    expect(await jwt({ token: patient } as never)).not.toBeNull();
+
+    // Forty minutes on: both gone.
+    vi.setSystemTime(signedInAt + 40 * 60 * 1000);
+    expect(await jwt({ token: patient } as never)).toBeNull();
   });
 });

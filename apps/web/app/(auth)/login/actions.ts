@@ -9,7 +9,6 @@
 // directly and we can read its real code.
 // ---------------------------------------------------------------------------
 
-import { AuthError } from "next-auth";
 import { z } from "zod";
 
 import { signIn } from "../../../auth";
@@ -26,6 +25,17 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+/** Next signals a redirect by throwing an error carrying a NEXT_REDIRECT digest. */
+function isRedirectError(error: unknown): boolean {
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
+/** Auth.js errors all carry a `type` set by the AuthError base constructor. */
+function isAuthJsError(error: unknown): boolean {
+  return typeof (error as { type?: unknown }).type === "string";
+}
 
 export async function signInAction(
   _previous: LoginState,
@@ -48,21 +58,28 @@ export async function signInAction(
       redirectTo: safeCallbackUrl(formData.get("callbackUrl")),
     });
   } catch (error) {
-    // On success signIn throws NEXT_REDIRECT, which is NOT an AuthError and
-    // MUST propagate — catching it here would silently break every login.
-    if (error instanceof AuthError) {
-      const code = (error as { cause?: { err?: { code?: string } } }).cause?.err
-        ?.code;
+    // On success signIn throws NEXT_REDIRECT. It MUST propagate — catching it
+    // here would silently break every login while looking handled.
+    if (isRedirectError(error)) throw error;
 
-      if (code === "ACCOUNT_LOCKED") return { error: "ACCOUNT_LOCKED" };
-      if (code === "INVALID_CREDENTIALS") return { error: "INVALID_CREDENTIALS" };
+    // Detection is by shape, not `instanceof AuthError`. Auth.js re-exports its
+    // error classes through @auth/core, and the identity of those classes is
+    // not stable across bundling boundaries — the same reason the
+    // CredentialsSignin check inside Auth.js itself fails on this version (see
+    // auth.ts). A shape check holds regardless of which copy threw.
+    const code = (error as { cause?: { err?: { code?: string } } }).cause?.err
+      ?.code;
 
-      // An AuthError we did not throw ourselves — a misconfiguration, say.
-      // Do not report it as bad credentials; that would send the user round a
-      // loop retyping a correct password.
-      return { error: "UNEXPECTED" };
-    }
+    if (code === "ACCOUNT_LOCKED") return { error: "ACCOUNT_LOCKED" };
+    if (code === "INVALID_CREDENTIALS") return { error: "INVALID_CREDENTIALS" };
 
+    // An Auth.js error we did not raise ourselves — a misconfiguration, say.
+    // Reported as unexpected rather than as bad credentials, so a broken
+    // deployment does not tell users their correct password is wrong.
+    if (isAuthJsError(error)) return { error: "UNEXPECTED" };
+
+    // Anything else is a genuine bug. Let it surface rather than disguising it
+    // as a failed login.
     throw error;
   }
 
