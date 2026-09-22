@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+const appUrl = process.env.AUTH_URL ?? "http://localhost:3000";
+const appOrigin = new URL(appUrl).host; // e.g. "localhost:3000" or "harmony-physio.com"
+
 const nextConfig = {
   // Transpile local workspace packages
   transpilePackages: ["@harmony/ui", "@harmony/types", "@harmony/db"],
@@ -39,10 +42,7 @@ const nextConfig = {
   experimental: {
     // Server Actions are stable in Next 14, but include for clarity
     serverActions: {
-      allowedOrigins: [
-        "localhost:3000",
-        process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, "") ?? "",
-      ].filter(Boolean),
+      allowedOrigins: [appOrigin],
     },
   },
 };

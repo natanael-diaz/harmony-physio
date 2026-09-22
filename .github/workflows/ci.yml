@@ -68,7 +68,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @harmony/db db:generate
+        run: pnpm --filter @harmony/db exec prisma generate
 
       - name: Run typecheck
         run: pnpm typecheck
@@ -98,7 +98,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @harmony/db db:generate
+        run: pnpm --filter @harmony/db exec prisma generate
 
       - name: Run tests
         run: pnpm test
