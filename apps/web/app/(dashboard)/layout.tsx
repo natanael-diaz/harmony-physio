@@ -2,6 +2,7 @@ import { needsConsent, prisma } from "@harmony/db";
 import { redirect } from "next/navigation";
 
 import { auth } from "../../auth";
+import { UnverifiedBanner } from "./unverified-banner";
 
 /**
  * Consent gate for every authenticated area (task 2.6).
@@ -30,7 +31,11 @@ export default async function DashboardLayout({
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { consentGivenAt: true, consentVersion: true },
+    select: {
+      consentGivenAt: true,
+      consentVersion: true,
+      emailVerified: true,
+    },
   });
 
   // The row backing a live session has gone — deleted mid-session, say. Fail
@@ -39,5 +44,13 @@ export default async function DashboardLayout({
 
   if (needsConsent(user)) redirect("/consent");
 
-  return <>{children}</>;
+  // Surfaced rather than enforced: whether an unverified address should block
+  // access is a product decision, and gating it today would lock out every
+  // existing account at once.
+  return (
+    <>
+      {user.emailVerified ? null : <UnverifiedBanner />}
+      {children}
+    </>
+  );
 }

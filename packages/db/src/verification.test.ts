@@ -147,6 +147,22 @@ describe("verifyEmailToken", () => {
     expect(tokenDeleteMany).toHaveBeenCalled();
   });
 
+  it("does not claim success when no user row was updated", async () => {
+    // The account was soft-deleted or removed between issuing the link and
+    // clicking it. Saying "Email confirmed" there is a lie.
+    const raw = "a-valid-raw-token";
+    const { prisma } = fakePrisma({
+      token: hashVerificationToken(raw),
+      expires: future,
+    });
+    vi.mocked(prisma.user.updateMany).mockResolvedValue({ count: 0 });
+
+    expect(await verifyEmailToken(prisma, "a@harmony.test", raw, NOW)).toEqual({
+      ok: false,
+      reason: "INVALID_OR_EXPIRED",
+    });
+  });
+
   it("rejects when no token exists for the address", async () => {
     const { prisma } = fakePrisma(null);
 

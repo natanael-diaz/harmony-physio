@@ -3,7 +3,7 @@
 import { CONSENT_VERSION, prisma } from "@harmony/db";
 import { redirect } from "next/navigation";
 
-import { auth } from "../../../auth";
+import { auth, signOut } from "../../../auth";
 
 /**
  * Record consent for the signed-in user (task 2.6).
@@ -24,4 +24,15 @@ export async function giveConsentAction(): Promise<void> {
   });
 
   redirect("/dashboard");
+}
+
+/**
+ * Leave without consenting.
+ *
+ * The counterpart to the accept button. Declining is not recorded as a state —
+ * it is simply ending the session, which is the only honest alternative when
+ * every authenticated route requires consent to proceed.
+ */
+export async function signOutAction(): Promise<void> {
+  await signOut({ redirectTo: "/login" });
 }

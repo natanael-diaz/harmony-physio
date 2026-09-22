@@ -140,6 +140,11 @@ async function main() {
       consentGivenAt: null,
       consentVersion: null,
       emailVerified: false,
+      // Also reset the lockout, like every other seeded user. Without it the
+      // account most likely to get locked while testing the 2.3 error states
+      // is the one re-seeding cannot unlock.
+      failedLoginAttempts: 0,
+      lockedUntil: null,
     },
     create: {
       email: "newpatient@harmony.test",
@@ -190,7 +195,10 @@ async function main() {
 main()
   .catch((error) => {
     console.error(error);
-    process.exit(1);
+    // exitCode rather than process.exit(): exit() terminates synchronously, so
+    // the finally below would never run and the connection would be dropped
+    // rather than closed.
+    process.exitCode = 1;
   })
   .finally(async () => {
     await prisma.$disconnect();

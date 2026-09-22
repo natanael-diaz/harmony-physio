@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { auth } from "../../../../auth";
+import { requireRole } from "../../../../lib/require-role";
 
 export const metadata: Metadata = {
   title: "Clinician dashboard",
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
  * session actually proves out end to end.
  */
 export default async function ClinicianDashboardPage() {
-  const session = await auth();
+  // Enforced here as well as in middleware — see requireRole.
+  const session = await requireRole("CLINICIAN");
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

@@ -101,10 +101,15 @@ export async function verifyEmailToken(
   // updateMany, not update: a user deleted between issuing and verifying must
   // not throw, and matching on deletedAt keeps a soft-deleted account from
   // being quietly reactivated.
-  await prisma.user.updateMany({
+  const updated = await prisma.user.updateMany({
     where: { email: identifier, deletedAt: null },
     data: { emailVerified: true, emailVerifiedAt: now },
   });
+
+  // Zero rows means the account was removed or soft-deleted between issuing
+  // the link and clicking it. Reporting success there would show the user
+  // "Email confirmed" for an address that is not verified and may not exist.
+  if (updated.count === 0) return { ok: false, reason: "INVALID_OR_EXPIRED" };
 
   return { ok: true };
 }

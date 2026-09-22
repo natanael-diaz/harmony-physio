@@ -40,6 +40,17 @@ const ROLE_OWNED_PREFIXES: Array<{ prefix: string; owner: Role }> = [
 ];
 
 /**
+ * Path containment on segment boundaries.
+ *
+ * A bare startsWith would make "/dashboard/patient" also match
+ * "/dashboard/patients" — so the day someone adds a staff-facing patient LIST
+ * at that path, clinicians get bounced out of it as trespassers.
+ */
+function isUnder(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
  * The fields we put on the JWT.
  *
  * Not a module augmentation: `@auth/core/jwt`, where the JWT interface is
@@ -97,7 +108,7 @@ export const authConfig = {
       // Entering another role's area is a denial, not a convenience redirect:
       // a patient must never reach the clinician views.
       const trespass = ROLE_OWNED_PREFIXES.find(
-        ({ prefix, owner }) => pathname.startsWith(prefix) && role !== owner,
+        ({ prefix, owner }) => isUnder(pathname, prefix) && role !== owner,
       );
       if (trespass) {
         return Response.redirect(new URL(home, request.nextUrl));
@@ -125,12 +136,13 @@ export const authConfig = {
 
       // Past the role-specific TTL: returning null invalidates the session so
       // the next request is unauthenticated.
-      if (
-        typeof harmonyToken.absoluteExpiry === "number" &&
-        Date.now() > harmonyToken.absoluteExpiry
-      ) {
-        return null;
-      }
+      //
+      // A token with no absoluteExpiry is treated as expired rather than
+      // waved through. Failing open here would give any cookie minted before
+      // this shipped — or by a future provider that never reaches the `user`
+      // branch above — the 30 minute patient ceiling on a clinician account.
+      if (typeof harmonyToken.absoluteExpiry !== "number") return null;
+      if (Date.now() > harmonyToken.absoluteExpiry) return null;
 
       return token;
     },

@@ -26,15 +26,22 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+/** `throw null` is legal JavaScript, and reading a property off it inside the
+ *  catch turns a recoverable failure into an opaque 500 raised from the
+ *  handler itself. */
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 /** Next signals a redirect by throwing an error carrying a NEXT_REDIRECT digest. */
 function isRedirectError(error: unknown): boolean {
-  const digest = (error as { digest?: unknown }).digest;
-  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+  if (!isObject(error)) return false;
+  return typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT");
 }
 
 /** Auth.js errors all carry a `type` set by the AuthError base constructor. */
 function isAuthJsError(error: unknown): boolean {
-  return typeof (error as { type?: unknown }).type === "string";
+  return isObject(error) && typeof error.type === "string";
 }
 
 export async function signInAction(
@@ -67,8 +74,9 @@ export async function signInAction(
     // not stable across bundling boundaries — the same reason the
     // CredentialsSignin check inside Auth.js itself fails on this version (see
     // auth.ts). A shape check holds regardless of which copy threw.
-    const code = (error as { cause?: { err?: { code?: string } } }).cause?.err
-      ?.code;
+    const code = isObject(error)
+      ? (error as { cause?: { err?: { code?: string } } }).cause?.err?.code
+      : undefined;
 
     if (code === "ACCOUNT_LOCKED") return { error: "ACCOUNT_LOCKED" };
     if (code === "INVALID_CREDENTIALS") return { error: "INVALID_CREDENTIALS" };

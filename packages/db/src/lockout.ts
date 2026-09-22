@@ -19,9 +19,17 @@ export type LockoutState = {
 export type LockoutDecision =
   /** Lock is live. Reject WITHOUT verifying the password. */
   | { status: "LOCKED"; unlocksAt: Date }
-  /** Not locked. `staleCounter` means a previous lock has expired and the
-   *  counter must be cleared before this attempt is counted, otherwise the
-   *  next single failure re-locks the account immediately. */
+  /**
+   * Not locked.
+   *
+   * `staleCounter` reports that a previous lock has expired while the counter
+   * is still at the threshold. Clearing it is NOT the caller's job — the
+   * increment statement in authenticateCredentials resets the counter in the
+   * same UPDATE that observes the expired lock. The flag is exposed for tests
+   * and diagnostics; an earlier version of this comment described it as a
+   * caller obligation, which was wrong and would have led someone to add a
+   * second, racy reset.
+   */
   | { status: "ALLOW"; staleCounter: boolean };
 
 export function evaluateLockout(

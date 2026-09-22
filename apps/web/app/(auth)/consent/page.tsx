@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "../../../auth";
-import { giveConsentAction } from "./actions";
+import { giveConsentAction, signOutAction } from "./actions";
 import { ConsentForm } from "./consent-form";
 
 export const metadata: Metadata = {
@@ -15,9 +15,9 @@ export const metadata: Metadata = {
  * signed-in user has not accepted the notice currently in force.
  *
  * There is no "decline" button. Declining is not a state this records — it is
- * simply not signing in, and the link below signs the user out. Offering a
- * decline that lands them back on a dashboard they may not use would be
- * misleading.
+ * simply not proceeding, so the alternative offered is signing out. Without
+ * that, a user who will not consent is trapped: every dashboard route bounces
+ * back here and the only control on the page agrees.
  */
 export default async function ConsentPage() {
   const session = await auth();
@@ -77,6 +77,15 @@ export default async function ConsentPage() {
         </p>
 
         <ConsentForm action={giveConsentAction} />
+
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="mt-3 w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+          >
+            Not now — sign out
+          </button>
+        </form>
 
         <p className="mt-4 text-center text-xs text-slate-400">
           Version {CONSENT_VERSION}

@@ -1,4 +1,6 @@
 import { prisma, verifyEmailToken } from "@harmony/db";
+
+import { auth } from "../../../auth";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -28,6 +30,13 @@ export default async function VerifyEmailPage({
     token && email
       ? await verifyEmailToken(prisma, email, token)
       : ({ ok: false, reason: "INVALID_OR_EXPIRED" } as const);
+
+  // Resending is scoped to the signed-in user's own address, so it cannot be
+  // used to probe which addresses exist or to mail a stranger. A visitor
+  // arriving from an email link is usually signed OUT, though, so offering
+  // them the button would show "Link sent" while sending nothing.
+  const session = await auth();
+  const signedIn = session?.user?.id !== undefined;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 to-teal-50 px-4">
@@ -59,13 +68,16 @@ export default async function VerifyEmailPage({
               Verification links work once and last 24 hours. Request a new one
               and we will email it to you.
             </p>
-            <ResendButton />
-            <Link
-              href="/login"
-              className="mt-4 block text-xs text-sky-600 hover:underline"
-            >
-              Back to sign in
-            </Link>
+            {signedIn ? (
+              <ResendButton />
+            ) : (
+              <Link
+                href="/login"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-600"
+              >
+                Sign in to request a new link
+              </Link>
+            )}
           </>
         )}
       </div>
