@@ -32,3 +32,6 @@ export * from "./auth";
 // Credentials authentication + lockout policy (task 2.1)
 export * from "./authenticate";
 export * from "./lockout";
+
+// GDPR consent policy (task 2.6)
+export * from "./consent";
