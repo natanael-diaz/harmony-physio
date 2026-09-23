@@ -24,10 +24,18 @@ export async function upsertClinicianProfileAction(
   data: ClinicianProfileData,
 ): Promise<ActionResult> {
   const session = await getSession();
-  if (!session?.user?.id) {
-    return { ok: false, error: "Not authenticated." };
-  }
+  if (!session?.user?.id) return { ok: false, error: "Not authenticated." };
+  if (session.user.role !== "CLINICIAN") return { ok: false, error: "Not authenticated." };
   const userId = session.user.id;
+
+  // Server-side HCPC format validation
+  const HCPC_RE = /^[A-Z]{2}\d{6}$/i;
+  if (!data.hcpcRegistrationNumber?.trim()) {
+    return { ok: false, error: "HCPC registration number is required." };
+  }
+  if (!HCPC_RE.test(data.hcpcRegistrationNumber.trim())) {
+    return { ok: false, error: "HCPC number must be 2 letters followed by 6 digits (e.g. PH123456)." };
+  }
 
   try {
     // Check before upsert only to determine the audit action; the actual

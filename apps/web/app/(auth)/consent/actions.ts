@@ -20,20 +20,17 @@ export async function giveConsentAction(): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const existing = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { consentGivenAt: true },
+  // updateMany with a consentGivenAt IS NULL guard is atomic: concurrent
+  // submissions both attempt the same UPDATE but only the first wins (the second
+  // sees 0 rows because consentGivenAt is now set). The original timestamp is
+  // preserved as UK GDPR Art 7(1) evidence.
+  await prisma.user.updateMany({
+    where: { id: session.user.id, consentGivenAt: null },
+    data: {
+      consentGivenAt: new Date(),
+      consentVersion: CONSENT_VERSION,
+    },
   });
-
-  if (!existing?.consentGivenAt) {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        consentGivenAt: new Date(),
-        consentVersion: CONSENT_VERSION,
-      },
-    });
-  }
 
   redirect("/dashboard");
 }

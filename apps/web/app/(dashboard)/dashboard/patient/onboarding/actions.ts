@@ -39,6 +39,7 @@ export async function createPatientProfileAction(
 ): Promise<ActionResult> {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
+  if (session.user.role !== "PATIENT") redirect("/login");
   const userId = session.user.id;
 
   // Guard: don't create a second profile for the same user.
@@ -46,11 +47,18 @@ export async function createPatientProfileAction(
     redirect("/dashboard/patient");
   }
 
-  // Validation
+  // Server-side validation (mirrors client — cannot trust client enforcement)
+  if (!data.dateOfBirth || isNaN(new Date(data.dateOfBirth).getTime())) {
+    return { ok: false, error: "Date of birth is required." };
+  }
+  if (!data.gender?.trim()) return { ok: false, error: "Gender is required." };
+  if (!data.phone?.trim()) return { ok: false, error: "Phone number is required." };
+  if (!data.addressLine1?.trim()) return { ok: false, error: "Address line 1 is required." };
+  if (!data.city?.trim()) return { ok: false, error: "City is required." };
+  if (!data.postcode?.trim()) return { ok: false, error: "Postcode is required." };
   if (!UK_POSTCODE_RE.test(data.postcode)) {
     return { ok: false, error: "Enter a valid UK postcode." };
   }
-
   if (data.nhsNumber && !validateNhsNumber(data.nhsNumber)) {
     return { ok: false, error: "Enter a valid 10-digit NHS number." };
   }
