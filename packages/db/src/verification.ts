@@ -14,6 +14,8 @@
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
+export const RESEND_COOLDOWN_MS = 60 * 1000;
+
 import type { PrismaClient } from "@prisma/client";
 
 /** 24 hours. Long enough to survive an email sitting unread overnight, short
@@ -122,6 +124,46 @@ export async function verifyEmailToken(
 
     return { ok: true };
   });
+}
+
+/**
+ * Issue a new verification token only if the cooldown has elapsed.
+ *
+ * The check and the delete+create are inside a single serializable transaction
+ * so two concurrent resend requests cannot both pass the cooldown gate. The
+ * first caller wins and creates a token; the second sees the new (unexpired)
+ * token and returns null.
+ */
+export async function createVerificationTokenIfCooldownElapsed(
+  prisma: PrismaClient,
+  email: string,
+  now: Date = new Date(),
+): Promise<IssuedToken | null> {
+  const identifier = email.trim().toLowerCase();
+
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.verificationToken.findFirst({
+      where: { identifier },
+      select: { expires: true },
+    });
+
+    if (existing) {
+      const createdAt = new Date(existing.expires.getTime() - VERIFICATION_TOKEN_TTL_MS);
+      if (now.getTime() - createdAt.getTime() < RESEND_COOLDOWN_MS) {
+        return null; // still within cooldown
+      }
+    }
+
+    await tx.verificationToken.deleteMany({ where: { identifier } });
+
+    const rawToken = randomBytes(32).toString("base64url");
+    const expires = new Date(now.getTime() + VERIFICATION_TOKEN_TTL_MS);
+    await tx.verificationToken.create({
+      data: { identifier, token: hashVerificationToken(rawToken), expires },
+    });
+
+    return { rawToken, expires };
+  }, { isolationLevel: "Serializable" });
 }
 
 function constantTimeEquals(a: string, b: string): boolean {

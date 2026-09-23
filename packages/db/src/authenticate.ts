@@ -80,17 +80,6 @@ export async function authenticateCredentials(
     return { ok: false, reason: "ACCOUNT_LOCKED", unlocksAt: lockout.unlocksAt };
   }
 
-  // A stale counter means a previous lock expired while failedLoginAttempts is
-  // still at or above the threshold.  Without resetting it now, the very next
-  // wrong password would push the counter to 6 and re-lock the account
-  // immediately — skipping the 5-attempt grace the policy promises.
-  if (lockout.staleCounter) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { failedLoginAttempts: 0, lockedUntil: null },
-    });
-  }
-
   const passwordMatches = await verifyPassword(password, user.hashedPassword);
 
   if (!passwordMatches) {
@@ -130,11 +119,15 @@ async function recordFailure(
     UPDATE "users"
     SET "failedLoginAttempts" = CASE
           WHEN "lockedUntil" IS NOT NULL AND "lockedUntil" <= ${now}
-            THEN 1                                  -- expired lock: start over
+            THEN 1                                  -- expired timed lock: start over
+          WHEN "lockedUntil" IS NULL AND "failedLoginAttempts" >= ${LOCKOUT_MAX_ATTEMPTS}
+            THEN 1                                  -- stale counter without lock: start over
           ELSE "failedLoginAttempts" + 1
         END,
         "lockedUntil" = CASE
           WHEN "lockedUntil" IS NOT NULL AND "lockedUntil" <= ${now}
+            THEN NULL
+          WHEN "lockedUntil" IS NULL AND "failedLoginAttempts" >= ${LOCKOUT_MAX_ATTEMPTS}
             THEN NULL
           WHEN "failedLoginAttempts" + 1 >= ${LOCKOUT_MAX_ATTEMPTS}
             THEN ${lockExpiry}
