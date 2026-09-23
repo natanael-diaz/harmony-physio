@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
+import { getPatientByUserId } from "@harmony/db";
 import { requireRole } from "../../../../lib/require-role";
 
 export const metadata: Metadata = {
   title: "Patient dashboard",
 };
 
-/**
- * Where middleware sends a PATIENT. Content is Sprint 2 work; this exists so
- * the role redirect has a real destination rather than a 404, and so the
- * session actually proves out end to end.
- */
 export default async function PatientDashboardPage() {
-  // Enforced here as well as in middleware — see requireRole.
   const session = await requireRole("PATIENT");
+
+  const patient = await getPatientByUserId(session.user.id);
+  if (!patient?.phone || !patient.dateOfBirth) {
+    redirect("/dashboard/patient/onboarding");
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
