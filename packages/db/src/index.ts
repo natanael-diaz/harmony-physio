@@ -43,3 +43,6 @@ export * from "./verification";
 export * from "./patient";
 export * from "./clinician";
 export * from "./audit";
+
+// NHS number validation
+export * from "./nhs";
