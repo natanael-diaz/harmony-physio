@@ -1,9 +1,9 @@
 "use server";
 
-import { createPatient, logAction, patientProfileExists } from "@harmony/db";
-import { headers } from "next/headers";
+import { createPatient, patientProfileExists } from "@harmony/db";
 import { redirect } from "next/navigation";
 
+import { logAuditEvent } from "../../../../../lib/audit-server";
 import { getSession } from "../../../../../lib/session";
 
 export type PatientOnboardingData = {
@@ -45,14 +45,6 @@ function validateNhsNumber(raw: string): boolean {
   if (checkDigit === 11) return Number(digits[9]) === 0;
   if (checkDigit === 10) return false;
   return Number(digits[9]) === checkDigit;
-}
-
-function getClientIp(): string | undefined {
-  const hdrs = headers();
-  const forwarded = hdrs.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]!.trim();
-  const real = hdrs.get("x-real-ip");
-  return real ?? undefined;
 }
 
 export async function createPatientProfileAction(
@@ -98,13 +90,11 @@ export async function createPatientProfileAction(
     requiresInterpreter: data.requiresInterpreter,
   });
 
-  const ip = getClientIp();
-  await logAction({
+  await logAuditEvent({
     userId,
     action: "PATIENT_PROFILE_CREATED",
     targetId: patient.id,
     targetType: "Patient",
-    ...(ip !== undefined ? { ipAddress: ip } : {}),
   });
 
   redirect("/dashboard/patient");

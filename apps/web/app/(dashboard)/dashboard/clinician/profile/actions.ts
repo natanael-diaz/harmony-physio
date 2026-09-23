@@ -3,12 +3,11 @@
 import {
   createClinician,
   getClinicianByUserId,
-  logAction,
   updateClinician,
 } from "@harmony/db";
 import type { WeeklyAvailability } from "@harmony/db";
-import { headers } from "next/headers";
 
+import { logAuditEvent } from "../../../../../lib/audit-server";
 import { getSession } from "../../../../../lib/session";
 
 export type ClinicianProfileData = {
@@ -25,14 +24,6 @@ export type ActionResult =
   | { ok: true }
   | { ok: false; error: string };
 
-function getClientIp(): string | undefined {
-  const hdrs = headers();
-  const forwarded = hdrs.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]!.trim();
-  const real = hdrs.get("x-real-ip");
-  return real ?? undefined;
-}
-
 export async function upsertClinicianProfileAction(
   data: ClinicianProfileData,
 ): Promise<ActionResult> {
@@ -44,7 +35,6 @@ export async function upsertClinicianProfileAction(
 
   try {
     const existing = await getClinicianByUserId(userId);
-    const ip = getClientIp();
 
     if (!existing) {
       const clinician = await createClinician({
@@ -56,12 +46,11 @@ export async function upsertClinicianProfileAction(
         availabilitySlots: data.availabilitySlots,
         acceptingNewPatients: data.acceptingNewPatients,
       });
-      await logAction({
+      await logAuditEvent({
         userId,
         action: "CLINICIAN_PROFILE_CREATED",
         targetId: clinician.id,
         targetType: "Clinician",
-        ...(ip !== undefined ? { ipAddress: ip } : {}),
       });
     } else {
       await updateClinician(existing.id, {
@@ -73,12 +62,11 @@ export async function upsertClinicianProfileAction(
         isActive: data.isActive,
         acceptingNewPatients: data.acceptingNewPatients,
       });
-      await logAction({
+      await logAuditEvent({
         userId,
         action: "CLINICIAN_PROFILE_UPDATED",
         targetId: existing.id,
         targetType: "Clinician",
-        ...(ip !== undefined ? { ipAddress: ip } : {}),
       });
     }
 
