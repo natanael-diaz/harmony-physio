@@ -28,9 +28,7 @@ describe("validateNhsNumber", () => {
     expect(validateNhsNumber("4857773458")).toBe(false);
   });
 
-  it("rejects all-zeros (modulus 11 = 11 → check digit 0, but sum ≠ 0)", () => {
-    // 0000000000 — weighted sum is 0, remainder 0, checkDigit = 11 → expects digits[9] === 0
-    // That is actually valid by the spec (check digit = 0 when result is 11)
+  it("accepts all-zeros (weighted sum 0 → checkDigit 11 → expects last digit 0, which it is)", () => {
     expect(validateNhsNumber("0000000000")).toBe(true);
   });
 

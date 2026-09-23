@@ -45,12 +45,29 @@ export async function getClinicianById(id: string): Promise<Clinician | null> {
 
 export async function upsertClinician(
   userId: string,
-  input: Omit<CreateClinicianInput, "userId">,
+  input: Omit<CreateClinicianInput, "userId"> & { isActive?: boolean },
 ): Promise<Clinician> {
+  const { isActive, ...rest } = input;
   return prisma.clinician.upsert({
     where: { userId },
-    create: { userId, ...input, specializations: input.specializations ?? [] },
-    update: { ...input },
+    create: {
+      userId,
+      hcpcRegistrationNumber: rest.hcpcRegistrationNumber,
+      specializations: rest.specializations ?? [],
+      bio: rest.bio ?? null,
+      qualifications: rest.qualifications ?? null,
+      availabilitySlots: rest.availabilitySlots ?? Prisma.JsonNull,
+      acceptingNewPatients: rest.acceptingNewPatients ?? true,
+    },
+    update: {
+      hcpcRegistrationNumber: rest.hcpcRegistrationNumber,
+      ...(rest.bio !== undefined ? { bio: rest.bio } : {}),
+      ...(rest.qualifications !== undefined ? { qualifications: rest.qualifications } : {}),
+      ...(rest.specializations !== undefined ? { specializations: rest.specializations } : {}),
+      ...(rest.availabilitySlots !== undefined ? { availabilitySlots: rest.availabilitySlots } : {}),
+      ...(rest.acceptingNewPatients !== undefined ? { acceptingNewPatients: rest.acceptingNewPatients } : {}),
+      ...(isActive !== undefined ? { isActive } : {}),
+    },
   });
 }
 

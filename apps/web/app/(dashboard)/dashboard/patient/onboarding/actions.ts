@@ -55,27 +55,41 @@ export async function createPatientProfileAction(
     return { ok: false, error: "Enter a valid 10-digit NHS number." };
   }
 
-  const patient = await createPatient({
-    userId,
-    dateOfBirth: new Date(data.dateOfBirth),
-    gender: data.gender,
-    phone: data.phone,
-    addressLine1: data.addressLine1,
-    ...(data.addressLine2 ? { addressLine2: data.addressLine2 } : {}),
-    city: data.city,
-    postcode: data.postcode.toUpperCase().replace(/(\S+)\s*(\d)/, "$1 $2"),
-    country: data.country,
-    ...(data.nhsNumber ? { nhsNumber: data.nhsNumber } : {}),
-    ...(data.gpName ? { gpName: data.gpName } : {}),
-    ...(data.gpPractice ? { gpPractice: data.gpPractice } : {}),
-    ...(data.gpAddress ? { gpAddress: data.gpAddress } : {}),
-    ...(data.emergencyContactName ? { emergencyContactName: data.emergencyContactName } : {}),
-    ...(data.emergencyContactPhone ? { emergencyContactPhone: data.emergencyContactPhone } : {}),
-    ...(data.emergencyContactRelation ? { emergencyContactRelation: data.emergencyContactRelation } : {}),
-    medicalAlerts: data.medicalAlerts,
-    preferredLanguage: data.preferredLanguage,
-    requiresInterpreter: data.requiresInterpreter,
-  });
+  let patient;
+  try {
+    patient = await createPatient({
+      userId,
+      dateOfBirth: new Date(data.dateOfBirth),
+      gender: data.gender,
+      phone: data.phone,
+      addressLine1: data.addressLine1,
+      ...(data.addressLine2 ? { addressLine2: data.addressLine2 } : {}),
+      city: data.city,
+      postcode: data.postcode.toUpperCase().replace(/(\S+)\s*(\d)/, "$1 $2"),
+      country: data.country,
+      ...(data.nhsNumber ? { nhsNumber: data.nhsNumber } : {}),
+      ...(data.gpName ? { gpName: data.gpName } : {}),
+      ...(data.gpPractice ? { gpPractice: data.gpPractice } : {}),
+      ...(data.gpAddress ? { gpAddress: data.gpAddress } : {}),
+      ...(data.emergencyContactName ? { emergencyContactName: data.emergencyContactName } : {}),
+      ...(data.emergencyContactPhone ? { emergencyContactPhone: data.emergencyContactPhone } : {}),
+      ...(data.emergencyContactRelation ? { emergencyContactRelation: data.emergencyContactRelation } : {}),
+      medicalAlerts: data.medicalAlerts,
+      preferredLanguage: data.preferredLanguage,
+      requiresInterpreter: data.requiresInterpreter,
+    });
+  } catch (err: unknown) {
+    // P2002 on userId unique index — concurrent submission already created the row.
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: string }).code === "P2002"
+    ) {
+      redirect("/dashboard/patient");
+    }
+    throw err;
+  }
 
   await logAuditEvent({
     userId,

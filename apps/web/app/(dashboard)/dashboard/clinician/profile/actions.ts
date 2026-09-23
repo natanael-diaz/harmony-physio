@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  createClinician,
-  getClinicianByUserId,
-  updateClinician,
-} from "@harmony/db";
+import { getClinicianByUserId, upsertClinician } from "@harmony/db";
 import type { WeeklyAvailability } from "@harmony/db";
 
 import { logAuditEvent } from "../../../../../lib/audit-server";
@@ -34,41 +30,27 @@ export async function upsertClinicianProfileAction(
   const userId = session.user.id;
 
   try {
-    const existing = await getClinicianByUserId(userId);
+    // Check before upsert only to determine the audit action; the actual
+    // write uses Prisma's native upsert (atomic on the userId unique index)
+    // so concurrent submissions cannot both succeed as creates.
+    const wasNew = !(await getClinicianByUserId(userId));
 
-    if (!existing) {
-      const clinician = await createClinician({
-        userId,
-        hcpcRegistrationNumber: data.hcpcRegistrationNumber,
-        ...(data.bio ? { bio: data.bio } : {}),
-        ...(data.qualifications ? { qualifications: data.qualifications } : {}),
-        specializations: data.specializations,
-        availabilitySlots: data.availabilitySlots,
-        acceptingNewPatients: data.acceptingNewPatients,
-      });
-      await logAuditEvent({
-        userId,
-        action: "CLINICIAN_PROFILE_CREATED",
-        targetId: clinician.id,
-        targetType: "Clinician",
-      });
-    } else {
-      await updateClinician(existing.id, {
-        hcpcRegistrationNumber: data.hcpcRegistrationNumber,
-        ...(data.bio ? { bio: data.bio } : {}),
-        ...(data.qualifications ? { qualifications: data.qualifications } : {}),
-        specializations: data.specializations,
-        availabilitySlots: data.availabilitySlots,
-        isActive: data.isActive,
-        acceptingNewPatients: data.acceptingNewPatients,
-      });
-      await logAuditEvent({
-        userId,
-        action: "CLINICIAN_PROFILE_UPDATED",
-        targetId: existing.id,
-        targetType: "Clinician",
-      });
-    }
+    const clinician = await upsertClinician(userId, {
+      hcpcRegistrationNumber: data.hcpcRegistrationNumber,
+      ...(data.bio ? { bio: data.bio } : {}),
+      ...(data.qualifications ? { qualifications: data.qualifications } : {}),
+      specializations: data.specializations,
+      availabilitySlots: data.availabilitySlots,
+      isActive: data.isActive,
+      acceptingNewPatients: data.acceptingNewPatients,
+    });
+
+    await logAuditEvent({
+      userId,
+      action: wasNew ? "CLINICIAN_PROFILE_CREATED" : "CLINICIAN_PROFILE_UPDATED",
+      targetId: clinician.id,
+      targetType: "Clinician",
+    });
 
     return { ok: true };
   } catch (err: unknown) {
