@@ -22,17 +22,17 @@ export default function LoginPage({
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500">
             <span className="text-xl font-bold text-white">H</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Sign in</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-ink-900">Sign in</h1>
+          <p className="mt-1 text-sm text-ink-500">
             Harmony Physio patient &amp; clinician portal
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-ink-200 bg-white p-8 shadow-sm">
           <LoginForm callbackUrl={searchParams.callbackUrl ?? "/dashboard"} />
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-500">
+        <p className="mt-6 text-center text-xs text-ink-500">
           By signing in you agree to our{" "}
           <a href="/privacy" className="text-sky-600 hover:underline">
             Privacy Policy

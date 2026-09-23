@@ -40,13 +40,13 @@ export default async function VerifyEmailPage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 to-teal-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-ink-200 bg-white p-8 text-center shadow-sm">
         {result.ok ? (
           <>
-            <h1 className="text-xl font-bold text-slate-900">
+            <h1 className="text-xl font-bold text-ink-900">
               Email confirmed
             </h1>
-            <p className="mt-3 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-ink-600">
               Thank you — your email address is verified.
             </p>
             <Link
@@ -58,13 +58,13 @@ export default async function VerifyEmailPage({
           </>
         ) : (
           <>
-            <h1 className="text-xl font-bold text-slate-900">
+            <h1 className="text-xl font-bold text-ink-900">
               This link has expired
             </h1>
             {/* One message for expired, already-used, malformed and unknown
                 alike. Distinguishing them tells someone holding a stolen link
                 which addresses exist. */}
-            <p className="mt-3 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-ink-600">
               Verification links work once and last 24 hours. Request a new one
               and we will email it to you.
             </p>

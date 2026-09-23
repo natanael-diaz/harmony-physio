@@ -38,3 +38,8 @@ export * from "./consent";
 
 // Email verification tokens (task 2.5)
 export * from "./verification";
+
+// Patient, Clinician, AuditLog query modules (task 3.1)
+export * from "./patient";
+export * from "./clinician";
+export * from "./audit";

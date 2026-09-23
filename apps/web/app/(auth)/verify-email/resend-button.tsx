@@ -28,7 +28,7 @@ export function ResendButton() {
     <form action={formAction}>
       <Button sent={state.sent === true} />
       {state.sent ? (
-        <p role="status" className="mt-3 text-xs text-slate-500">
+        <p role="status" className="mt-3 text-xs text-ink-500">
           If that account needs verifying, a new link is on its way.
         </p>
       ) : null}

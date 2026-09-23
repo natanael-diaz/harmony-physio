@@ -63,7 +63,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
       <div>
         <label
           htmlFor="email"
-          className="mb-1.5 block text-sm font-medium text-slate-700"
+          className="mb-1.5 block text-sm font-medium text-ink-700"
         >
           Email address
         </label>
@@ -75,7 +75,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
           required
           aria-invalid={state.error ? true : undefined}
           aria-describedby={message ? "login-error" : undefined}
-          className="block w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          className="block w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 placeholder-ink-400 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           placeholder="you@example.com"
         />
       </div>
@@ -84,7 +84,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         <div className="mb-1.5 flex items-center justify-between">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-700"
           >
             Password
           </label>
@@ -103,7 +103,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
           required
           aria-invalid={state.error ? true : undefined}
           aria-describedby={message ? "login-error" : undefined}
-          className="block w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          className="block w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 placeholder-ink-400 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           placeholder="••••••••"
         />
       </div>

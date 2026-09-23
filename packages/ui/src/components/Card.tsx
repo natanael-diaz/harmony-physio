@@ -15,7 +15,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
     <Tag
       ref={ref as React.Ref<HTMLDivElement>}
       className={[
-        "rounded-xl border border-slate-200 bg-white shadow-sm",
+        "rounded-xl border border-ink-200 bg-white shadow-sm",
         noPadding ? "" : "p-6",
         className,
       ]
@@ -58,7 +58,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={["text-base font-semibold text-slate-900", className]
+      className={["text-base font-semibold text-ink-900", className]
         .filter(Boolean)
         .join(" ")}
       {...props}
@@ -74,7 +74,7 @@ export function CardBody({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={["text-sm text-slate-600", className].filter(Boolean).join(" ")} {...props}>
+    <div className={["text-sm text-ink-600", className].filter(Boolean).join(" ")} {...props}>
       {children}
     </div>
   );
@@ -88,7 +88,7 @@ export function CardFooter({
   return (
     <div
       className={[
-        "mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-4",
+        "mt-4 flex items-center justify-end gap-2 border-t border-ink-100 pt-4",
         className,
       ]
         .filter(Boolean)
