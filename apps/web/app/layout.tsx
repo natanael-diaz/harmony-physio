@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description:
     "Harmony Physiotherapy Clinic — specialist physiotherapy services in the UK. Book appointments, access your records, and connect with your clinician.",
   metadataBase: new URL(
-    process.env.NEXTAUTH_URL ?? "https://app.harmonyphysio.co.uk"
+    process.env.AUTH_URL ?? "https://app.harmonyphysio.co.uk"
   ),
   openGraph: {
     type: "website",
@@ -36,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-GB" className={inter.variable}>
-      <body className="min-h-screen bg-slate-50 font-sans antialiased">
+      <body className="min-h-screen bg-ink-50 font-sans antialiased">
         {children}
       </body>
     </html>

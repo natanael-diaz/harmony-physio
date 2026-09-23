@@ -54,3 +54,7 @@ pnpm-debug.log*
 
 # Vercel
 .vercel
+
+# npm / yarn lockfiles — this is a pnpm workspace (see pnpm-lock.yaml)
+package-lock.json
+yarn.lock

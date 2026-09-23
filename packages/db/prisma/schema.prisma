@@ -76,6 +76,11 @@ model User {
   emailVerified  Boolean   @default(false)
   emailVerifiedAt DateTime?
 
+  // Brute-force protection — account locks for 15 minutes after 5 failed attempts.
+  // Counter is reset to 0 on any successful login.
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
   // Soft delete (GDPR right-to-erasure workflow — mark deleted, scrub PII separately)
   deletedAt      DateTime?
 
@@ -92,7 +97,9 @@ model User {
   patient        Patient?
   clinician      Clinician?
   auditLogsAsActor AuditLog[] @relation("AuditActor")
+  /// UNUSED — JWT-only auth, never populated. See the note above model Account.
   accounts       Account[]
+  /// UNUSED — JWT-only auth, never populated. Do NOT use to check active sessions.
   sessions       Session[]
 
   @@index([role])
@@ -110,7 +117,10 @@ model Patient {
   userId String @unique
 
   // NHS identifier — optional (not all patients will have/provide one)
-  // Format: 3-3-4 digit groups e.g. 485 777 3456 — validated at app layer
+  // Stored unspaced, 10 digits. Modulus 11 check digit validated at app layer
+  // (see technical-tasks.md) — e.g. 4857773457. Display formatting into 3-3-4
+  // groups is a presentation concern; do not persist the spaces or the unique
+  // constraint can be defeated by spacing.
   nhsNumber String? @unique
 
   // Demographics
@@ -400,7 +410,20 @@ model VideoSession {
 }
 
 // ---------------------------------------------------------------------------
-// NextAuth v5 / @auth/prisma-adapter v2 required models
+// OAuth / session tables — currently UNUSED.
+//
+// Day 2 decision (2026-09-22): auth is JWT-only with a credentials provider and
+// no @auth/prisma-adapter. The adapter requires User.emailVerified to be
+// DateTime?; this schema keeps it Boolean plus a separate emailVerifiedAt.
+//
+// These tables already exist from 20260922000000_add_nextauth_adapter_models.
+// They are kept because task 2.5 needs VerificationToken, NOT because they save
+// a future migration — adopting the adapter later still means migrating
+// emailVerified. Whether to drop Account and Session is an open question.
+//
+// Nothing reads or writes these today. In particular User.accounts and
+// User.sessions are always empty: do not use them to reason about active
+// sessions.
 // ---------------------------------------------------------------------------
 
 model Account {

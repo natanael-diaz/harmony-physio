@@ -4,12 +4,58 @@
 
 @layer base {
   :root {
-    /* Harmony Physio brand colours */
-    --color-primary: 14 165 233;      /* sky-500 */
-    --color-primary-dark: 2 132 199;  /* sky-600 */
-    --color-accent: 20 184 166;       /* teal-500 */
-    --color-surface: 248 250 252;     /* slate-50 */
-    --color-surface-dark: 15 23 42;   /* slate-900 */
+    /* Surfaces */
+    --surface-page: #F8F9FC;          /* ink-50 */
+    --surface-raised: #FFFFFF;
+    --surface-sunken: #EEEFF6;        /* ink-100 */
+    --surface-brand-subtle: #F0F0FF;  /* peri-50 */
+    --surface-brand: #9FA1FF;         /* peri-400 */
+    --surface-brand-strong: #5050CE;  /* peri-600 */
+    --surface-info-subtle: #AEE2FF;   /* sky-100 */
+    --surface-success-subtle: #D9F9DF; /* mint-100 */
+    --surface-danger-subtle: #FFEBEE; /* rose-50 */
+    --surface-warning-subtle: #FFF7E5; /* amber-50 */
+    --surface-disabled: #EEEFF6;      /* ink-100 */
+
+    /* Text */
+    --text-primary: #141429;          /* ink-900 */
+    --text-secondary: #363654;        /* ink-700 */
+    --text-muted: #52536F;            /* ink-600 */
+    --text-on-brand: #141429;         /* ink-900 on peri-400 = 7.76:1 */
+    --text-on-dark: #FFFFFF;
+    --text-disabled: #71738E;         /* ink-500 */
+    --text-link: #5050CE;             /* peri-600 */
+    --text-link-hover: #3F3CAA;       /* peri-700 */
+    --text-success: #155B3A;          /* mint-700 */
+    --text-danger: #85142B;           /* rose-700 */
+    --text-warning: #743D06;          /* amber-700 */
+    --text-info: #0C426E;             /* sky-700 */
+
+    /* Borders */
+    --border-subtle: #DFE1EC;         /* ink-200 */
+    --border-default: #C8CADA;        /* ink-300 */
+    --border-strong: #8D8EA5;         /* ink-450 — only on white/ink-50 surfaces */
+    --border-brand: #5050CE;          /* peri-600 */
+    --border-danger: #CB2A4A;         /* rose-500 */
+    --border-focus: #5050CE;          /* peri-600 */
+
+    /* Actions */
+    --action-primary-bg: #9FA1FF;         /* peri-400 */
+    --action-primary-bg-hover: #8B8DF7;   /* peri-450 */
+    --action-primary-bg-pressed: #7375E8; /* peri-500 */
+    --action-primary-text: #141429;       /* ink-900 */
+    --action-secondary-bg: #FFFFFF;
+    --action-secondary-border: #5050CE;   /* peri-600 */
+    --action-secondary-text: #3F3CAA;     /* peri-700 */
+    --action-secondary-bg-hover: #F0F0FF; /* peri-50 */
+    --action-ghost-text: #3F3CAA;         /* peri-700 */
+    --action-ghost-bg-hover: #F0F0FF;     /* peri-50 */
+    --action-disabled-bg: #EEEFF6;        /* ink-100 */
+    --action-disabled-text: #71738E;      /* ink-500 */
+
+    /* Focus ring */
+    --focus-ring: #5050CE;            /* peri-600 */
+    --focus-offset: #FFFFFF;
   }
 
   html {
@@ -17,12 +63,14 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900;
+    background-color: var(--surface-page);
+    color: var(--text-primary);
   }
 
   /* Focus ring for accessibility (WCAG 2.1 AA) */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-sky-500;
+    @apply outline-2 outline-offset-2;
+    outline-color: var(--focus-ring);
   }
 }
 

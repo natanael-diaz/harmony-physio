@@ -25,3 +25,21 @@ if (process.env.NODE_ENV !== "production") {
 
 // Re-export generated types so consumers only need @harmony/db
 export * from "@prisma/client";
+
+// Password hashing helpers (task 2.4)
+export * from "./auth";
+
+// Credentials authentication + lockout policy (task 2.1)
+export * from "./authenticate";
+export * from "./lockout";
+
+// GDPR consent policy (task 2.6)
+export * from "./consent";
+
+// Email verification tokens (task 2.5)
+export * from "./verification";
+
+// Patient, Clinician, AuditLog query modules (task 3.1)
+export * from "./patient";
+export * from "./clinician";
+export * from "./audit";
