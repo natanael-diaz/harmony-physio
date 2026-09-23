@@ -17,7 +17,9 @@ export type CreateClinicianInput = {
   acceptingNewPatients?: boolean;
 };
 
-export type UpdateClinicianInput = Partial<Omit<CreateClinicianInput, "userId">>;
+export type UpdateClinicianInput = Partial<Omit<CreateClinicianInput, "userId">> & {
+  isActive?: boolean;
+};
 
 export async function createClinician(input: CreateClinicianInput): Promise<Clinician> {
   return prisma.clinician.create({
