@@ -65,8 +65,13 @@ export type VerificationResult =
 /**
  * Consume a token and mark the address verified.
  *
- * Single use — the row is deleted whether or not it had expired, so a link
- * cannot be replayed and dead rows do not accumulate.
+ * Single use — the row is deleted atomically before any comparison, so:
+ *   • Two concurrent requests cannot both consume the same token (race fix).
+ *   • A wrong token guess still deletes the row, leaving nothing to probe for
+ *     the remaining 24-hour TTL ("spend it either way").
+ *
+ * The DELETE … RETURNING is a single atomic statement in PostgreSQL. Only one
+ * concurrent caller gets a row back; all others get null.
  */
 export async function verifyEmailToken(
   prisma: PrismaClient,
@@ -79,39 +84,44 @@ export async function verifyEmailToken(
 
   const candidate = hashVerificationToken(rawToken);
 
-  const stored = await prisma.verificationToken.findFirst({
-    where: { identifier },
+  return prisma.$transaction(async (tx) => {
+    // Atomically delete and retrieve the token row for this email. Only one
+    // concurrent consumer wins; others receive an empty array.
+    const rows = await tx.$queryRaw<Array<{ token: string; expires: Date }>>`
+      DELETE FROM verification_tokens
+      WHERE   identifier = ${identifier}
+      RETURNING token, expires
+    `;
+    const stored = rows[0] ?? null;
+
+    // Row not found — already consumed, never existed, or a concurrent request
+    // beat us to it.
+    if (!stored) return { ok: false, reason: "INVALID_OR_EXPIRED" };
+
+    // Row found and deleted. Token comparison happens after deletion — "spend it
+    // either way". Constant-time compare prevents timing side-channels.
+    if (!constantTimeEquals(stored.token, candidate)) {
+      return { ok: false, reason: "INVALID_OR_EXPIRED" };
+    }
+
+    if (stored.expires.getTime() <= now.getTime()) {
+      return { ok: false, reason: "INVALID_OR_EXPIRED" };
+    }
+
+    // updateMany, not update: a user deleted between issuing and verifying must
+    // not throw, and matching on deletedAt keeps a soft-deleted account from
+    // being quietly reactivated.
+    const updated = await tx.user.updateMany({
+      where: { email: identifier, deletedAt: null },
+      data: { emailVerified: true, emailVerifiedAt: now },
+    });
+
+    // Zero rows means the account was removed or soft-deleted between issuing
+    // the link and clicking it.
+    if (updated.count === 0) return { ok: false, reason: "INVALID_OR_EXPIRED" };
+
+    return { ok: true };
   });
-  if (!stored) return { ok: false, reason: "INVALID_OR_EXPIRED" };
-
-  // Compared in constant time. The lookup is by identifier, so a plain ===
-  // would leak the stored hash a byte at a time to anyone able to measure it.
-  if (!constantTimeEquals(stored.token, candidate)) {
-    return { ok: false, reason: "INVALID_OR_EXPIRED" };
-  }
-
-  // Delete before checking expiry: an expired token is spent either way, and
-  // leaving it would let an attacker keep testing it.
-  await prisma.verificationToken.deleteMany({ where: { identifier } });
-
-  if (stored.expires.getTime() <= now.getTime()) {
-    return { ok: false, reason: "INVALID_OR_EXPIRED" };
-  }
-
-  // updateMany, not update: a user deleted between issuing and verifying must
-  // not throw, and matching on deletedAt keeps a soft-deleted account from
-  // being quietly reactivated.
-  const updated = await prisma.user.updateMany({
-    where: { email: identifier, deletedAt: null },
-    data: { emailVerified: true, emailVerifiedAt: now },
-  });
-
-  // Zero rows means the account was removed or soft-deleted between issuing
-  // the link and clicking it. Reporting success there would show the user
-  // "Email confirmed" for an address that is not verified and may not exist.
-  if (updated.count === 0) return { ok: false, reason: "INVALID_OR_EXPIRED" };
-
-  return { ok: true };
 }
 
 function constantTimeEquals(a: string, b: string): boolean {

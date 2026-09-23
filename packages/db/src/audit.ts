@@ -1,6 +1,6 @@
-import { prisma } from "./index";
+import { prisma as defaultPrisma } from "./index";
 import { Prisma } from "@prisma/client";
-import type { AuditLog } from "@prisma/client";
+import type { PrismaClient, AuditLog } from "@prisma/client";
 
 export type LogActionInput = {
   userId: string;
@@ -15,9 +15,16 @@ export type LogActionInput = {
 // ---------------------------------------------------------------------------
 // AuditLog is append-only. Never expose update or delete from this module.
 // NHS DTAC and GDPR Article 30 require an immutable audit trail.
+//
+// Each function accepts an optional `prisma` parameter (defaults to the module
+// singleton) so callers can inject a test client without hitting a real DB —
+// consistent with the DI pattern used in authenticate.ts and verification.ts.
 // ---------------------------------------------------------------------------
 
-export async function logAction(input: LogActionInput): Promise<AuditLog> {
+export async function logAction(
+  input: LogActionInput,
+  prisma: PrismaClient = defaultPrisma,
+): Promise<AuditLog> {
   return prisma.auditLog.create({
     data: {
       userId: input.userId,
@@ -35,6 +42,7 @@ export async function getAuditLogsForTarget(
   targetId: string,
   targetType: string,
   limit = 50,
+  prisma: PrismaClient = defaultPrisma,
 ): Promise<AuditLog[]> {
   return prisma.auditLog.findMany({
     where: { targetId, targetType },
@@ -46,6 +54,7 @@ export async function getAuditLogsForTarget(
 export async function getAuditLogsForActor(
   userId: string,
   limit = 50,
+  prisma: PrismaClient = defaultPrisma,
 ): Promise<AuditLog[]> {
   return prisma.auditLog.findMany({
     where: { userId },

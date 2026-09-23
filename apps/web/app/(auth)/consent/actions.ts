@@ -10,18 +10,30 @@ import { auth, signOut } from "../../../auth";
  *
  * Writes only the consent fields, and only for the session's own user id —
  * never an id taken from the form, which the client controls.
+ *
+ * Idempotency guard: if `consentGivenAt` is already set we skip the UPDATE
+ * and go straight to the dashboard. This preserves the original timestamp as
+ * required by UK GDPR Art 7(1) evidence requirements — a retry or direct POST
+ * must never overwrite the first-consent record.
  */
 export async function giveConsentAction(): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  await prisma.user.update({
+  const existing = await prisma.user.findUnique({
     where: { id: session.user.id },
-    data: {
-      consentGivenAt: new Date(),
-      consentVersion: CONSENT_VERSION,
-    },
+    select: { consentGivenAt: true },
   });
+
+  if (!existing?.consentGivenAt) {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        consentGivenAt: new Date(),
+        consentVersion: CONSENT_VERSION,
+      },
+    });
+  }
 
   redirect("/dashboard");
 }

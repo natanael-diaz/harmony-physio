@@ -12,7 +12,13 @@ const NOW = new Date("2026-09-22T12:00:00.000Z");
 
 function fakePrisma(stored: { token: string; expires: Date } | null) {
   const userUpdateMany = vi.fn(async () => ({ count: 1 }));
+  // tokenDeleteMany is used by createVerificationToken (batch transaction).
   const tokenDeleteMany = vi.fn(async () => ({ count: 1 }));
+  // $queryRaw backs the atomic DELETE … RETURNING used by verifyEmailToken.
+  // Returns the stored row (if any) so callers can check the token / expiry.
+  const queryRaw = vi.fn(async () =>
+    stored ? [{ token: stored.token, expires: stored.expires }] : [],
+  );
   // Typed parameter so the assertions below can read the arguments; a
   // zero-arity vi.fn() gives .mock.calls an empty tuple type.
   const tokenCreate = vi.fn(
@@ -21,7 +27,19 @@ function fakePrisma(stored: { token: string; expires: Date } | null) {
     }) => ({}),
   );
   const prisma = {
-    $transaction: vi.fn(async (ops: unknown[]) => ops),
+    $transaction: vi.fn(async (arg: unknown) => {
+      if (typeof arg === "function") {
+        // Interactive transaction — execute the callback with a minimal tx proxy.
+        const tx = {
+          $queryRaw: queryRaw,
+          user: { updateMany: userUpdateMany },
+        };
+        return (arg as (tx: unknown) => Promise<unknown>)(tx);
+      }
+      // Batch transaction (array of promises) — the individual mock fns are
+      // already invoked when the array is built, so just await them.
+      return Promise.all(arg as Promise<unknown>[]);
+    }),
     verificationToken: {
       findFirst: vi.fn(async () => stored),
       create: tokenCreate,
@@ -29,7 +47,7 @@ function fakePrisma(stored: { token: string; expires: Date } | null) {
     },
     user: { updateMany: userUpdateMany },
   } as unknown as PrismaClient;
-  return { prisma, userUpdateMany, tokenDeleteMany, tokenCreate };
+  return { prisma, userUpdateMany, tokenDeleteMany, tokenCreate, queryRaw };
 }
 
 describe("createVerificationToken", () => {
@@ -107,14 +125,15 @@ describe("verifyEmailToken", () => {
 
   it("consumes the token so it cannot be replayed", async () => {
     const raw = "a-valid-raw-token";
-    const { prisma, tokenDeleteMany } = fakePrisma({
+    const { prisma, queryRaw } = fakePrisma({
       token: hashVerificationToken(raw),
       expires: future,
     });
 
     await verifyEmailToken(prisma, "a@harmony.test", raw, NOW);
 
-    expect(tokenDeleteMany).toHaveBeenCalled();
+    // The atomic DELETE … RETURNING via $queryRaw is the single consume step.
+    expect(queryRaw).toHaveBeenCalled();
   });
 
   it.each([
@@ -134,7 +153,7 @@ describe("verifyEmailToken", () => {
 
   it("rejects an expired token and still spends it", async () => {
     const raw = "a-valid-raw-token";
-    const { prisma, userUpdateMany, tokenDeleteMany } = fakePrisma({
+    const { prisma, userUpdateMany, queryRaw } = fakePrisma({
       token: hashVerificationToken(raw),
       expires: new Date(NOW.getTime() - 1),
     });
@@ -143,8 +162,8 @@ describe("verifyEmailToken", () => {
 
     expect(result).toEqual({ ok: false, reason: "INVALID_OR_EXPIRED" });
     expect(userUpdateMany).not.toHaveBeenCalled();
-    // Deleted anyway, so it cannot be tested repeatedly.
-    expect(tokenDeleteMany).toHaveBeenCalled();
+    // Deleted via the atomic DELETE … RETURNING, so it cannot be probed again.
+    expect(queryRaw).toHaveBeenCalled();
   });
 
   it("does not claim success when no user row was updated", async () => {

@@ -2,7 +2,7 @@ import type { Role } from "@harmony/db";
 import { redirect } from "next/navigation";
 
 import { ROLE_HOME } from "../auth.config";
-import { auth } from "../auth";
+import { getSession } from "./session";
 
 /**
  * Assert the signed-in user holds `role`, or send them to their own area.
@@ -15,7 +15,7 @@ import { auth } from "../auth";
  * role-owned route should call this.
  */
 export async function requireRole(role: Role) {
-  const session = await auth();
+  const session = await getSession();
 
   if (!session?.user?.role) redirect("/login");
   if (session.user.role !== role) redirect(ROLE_HOME[session.user.role]);

@@ -1,7 +1,7 @@
 import { needsConsent, prisma } from "@harmony/db";
 import { redirect } from "next/navigation";
 
-import { auth } from "../../auth";
+import { getSession } from "../../lib/session";
 import { UnverifiedBanner } from "./unverified-banner";
 
 /**
@@ -22,7 +22,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await getSession();
 
   // Middleware should have caught this already. Repeated here because a layout
   // that assumes a session and gets none would render a signed-out page as if
