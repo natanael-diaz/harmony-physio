@@ -1,6 +1,6 @@
 "use server";
 
-import { createPatient, patientProfileExists } from "@harmony/db";
+import { createPatient, patientProfileExists, validateNhsNumber } from "@harmony/db";
 import { redirect } from "next/navigation";
 
 import { logAuditEvent } from "../../../../../lib/audit-server";
@@ -33,19 +33,6 @@ export type ActionResult =
 
 /** UK postcode regex (loose — covers all current formats). */
 const UK_POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
-
-/** NHS number modulus-11 check digit validation. */
-function validateNhsNumber(raw: string): boolean {
-  const digits = raw.replace(/\s/g, "");
-  if (!/^\d{10}$/.test(digits)) return false;
-  const weights = [10, 9, 8, 7, 6, 5, 4, 3, 2];
-  const sum = weights.reduce((acc, w, i) => acc + w * Number(digits[i]), 0);
-  const remainder = sum % 11;
-  const checkDigit = 11 - remainder;
-  if (checkDigit === 11) return Number(digits[9]) === 0;
-  if (checkDigit === 10) return false;
-  return Number(digits[9]) === checkDigit;
-}
 
 export async function createPatientProfileAction(
   data: PatientOnboardingData,
